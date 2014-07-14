@@ -2217,6 +2217,7 @@ class earthquake(locbase):
 				#
 		if rtype=='omorisatbump':
 			#"saturated omori-type"
+			# (see also tahir type below).
 			#
 			# "Aftershock" decay formulation (with tahir2012, zalohar2013 largest-aftershock formulation)...
 			#
@@ -2261,6 +2262,29 @@ class earthquake(locbase):
 				#radialDens = (q-1.0)*(r02**(q-1.0))/((r02+rprime)**q)
 				#
 		#
+		#
+		if rtype in ('tz', 'tahir'):
+			# tahir-zalohar type distribution, where hazard is focused on largest aftershock, presumably
+			# at a rupture length distance (for now. later versions might be more sophisticated).
+			#
+			# start with an omori-like distribution, combine with poisson dist. for now, assume k=1, l_r.
+			omori_fact   = .5
+			poisson_fact = .5
+			op_sum = omori_fact + poisson_fact
+			#
+			# normalize these factors (which we will one day parameterize)
+			omori_fact/=op_sum
+			poisson_fact/=op_sum
+			#
+			radialDens_omori   = (q-1.0)*(r0ssim**(q-1.0))*(r0ssim + rprime)**(-q)
+			#poisson_mean_r = r0ssim		# or maybe rupture len?
+			poisson_mean_r = .5*lrupture	#
+			radialDens_poisson = (1.0/poisson_mean_r)*(rprime/poisson_mean_r)*math.exp(-rprime/poisson_mean_r)
+			#
+			radialDens = omori_fact*radialDens_omori + poisson_fact*radialDens_poisson
+			#
+		#		
+		#
 		if rtype=='satpl':
 			# fully saturated PL.
 			# the normalization can be done fully explicitly fron N = N'0*r0 + N'0*r0^q*int(r^-q dr)
@@ -2276,6 +2300,8 @@ class earthquake(locbase):
 				#radialDens = (rcrit**q)*1.0*rprime**(-q)
 				radialDens = (normfact*rcrit**q)*rprime**(-q)		# note same as above but normfact != 1
 		#
+			
+			#
 		# avoid divide by zero...
 		#if r==0.0: return 0.0
 		if rprime==0.0: return 0.0
