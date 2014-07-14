@@ -177,7 +177,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 #
 
 #
-def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-New')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='goldenguardian2013', catlen=3.0*365.0, doplot=False, lons=[-126.5, -118.5], lats=[34.0, 43.5], bigquakes=[], bigmag=6.0, scalemag=5.0, addquakes=[], eqeps=1.414, eqtheta=None):
+def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-New')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='goldenguardian2013', catlen=3.0*365.0, doplot=False, lons=[-126.5, -118.5], lats=[34.0, 43.5], bigquakes=[], bigmag=6.0, scalemag=5.0, addquakes=[], eqeps=1.414, eqtheta=None, rtype='ssim'):
 	#
 	# eqeps normally
 	#dt2=dtm.datetime.now(pytz.timezone('UTC'))
@@ -254,7 +254,7 @@ def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-N
 		#
 		thisfnameroot = fnameroot + '-%d' % fcindex
 		bc1=None
-		bc1 = makeETASFCfiles(todt=fcdt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=thisfnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes[:], bigmag=scalemag, addquakes=addquakes, eqeps=activeEps, eqtheta=activeTheta, cmfnum=0, fignum=1, colorbar_fontcolor='w')
+		bc1 = makeETASFCfiles(todt=fcdt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=thisfnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes[:], bigmag=scalemag, addquakes=addquakes, eqeps=activeEps, eqtheta=activeTheta, cmfnum=0, fignum=1, colorbar_fontcolor='w', rtype=rtype)
 		#
 		mfb=bc1.BASScastContourMap(fignum=1)
 		# and we'll want to draw the fault here as well...
@@ -310,11 +310,11 @@ def makeShakeout1(todt=dtm.datetime(2012, 10, 19, tzinfo=pytz.timezone('UTC')), 
 	
 	return bc1
 #
-def makeParkfieldETAS(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=None, bigmag=4.0, eqtheta=None, eqeps=None, fitfactor=5.0):
+def makeParkfieldETAS(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.95, -119.5], lats=[35.75, 36.5], bigquakes=None, bigmag=4.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim'):
 	if bigquakes==None:
 		# but i don't think bigquakes does anything yet...
 		bigquakes=[[mpd.date2num(dtm.datetime(2004, 9, 28, 17, 15, 24,0, tzinfo=pytz.timezone('UTC'))), 35.82, -120.37, 6.0]]
-	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
+	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, rtype=rtype)
 #
 def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim'):
 	#
