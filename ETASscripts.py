@@ -113,6 +113,16 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	
 	cat=[]
 	cat = bcp.getMFETAScatFromANSS(lons=lons, lats=lats, dates=[dt0, dt1], mc=mc)
+	#
+	# bandaid:
+	# this query pulls [float-date, lat, lon, mag, depth?].
+	# BUT, there's a bit that checks for epsilon, theta orientation in the ETAS script, and of course
+	# it expects these to be in rw[4], rw[5]. this query puts depth in rw[4]... so we get a mess.
+	# for now, truncate depth. we'll fix this later by converting the catalog rows to dictionary objects... or by finding the scripts that apply
+	# epsilon, theta and correcting them to use at least [5],[6]... or we just add a dict. object as an item in the list?
+	# ... you know what, screw it. let's just call the correct cols here. we'll fix the scenario later if need be.
+	#cat = map(operator.itemgetter(0,1,2,3), cat)
+	#
 	if len(cat)==0:
 		print "no available data."
 		return None

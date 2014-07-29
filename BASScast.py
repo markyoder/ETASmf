@@ -123,7 +123,7 @@ class BASScast(object):
 		# important, as the idea is just to get a reasonable linear fit for direction and epsilon (width).
 		# then, we need a catalog of loc, sig, theta (though we can store these vals. in quakes[] and write a script to retrieve
 		# them in various forms.
-		print eqtheta, eqeps
+		print "eqtheta, eqeps: ", eqtheta, eqeps
 		if eqtheta==None or eqeps==None:
 			# in this case, do a dynamic transform.
 			#xy=map(operator.itemgetter(1,2), incat)	# so this will be lat, lon
@@ -152,11 +152,15 @@ class BASScast(object):
 			# if available...
 			# set earthquake orientation (if available). keep an eye on this feature; we might be, in some cases,
 			# passing long catalog entries where cols [4,5] are NOT theta,epsilon.
-			if len(rw)>=5:
-				if rw[4] > 0.: thiseq.eqeps = rw[4]
+			# this is a problem in many existing scripts since rw[4] is often depth. this functionality was put in place for one of the
+			# scenario exercises, right? maybe we can (in the short term) correct it there and expand this to at least rw[5], rw[6].
+			# eventually, replace list-rows with dictionary-rows.
+			# for now, use len()>6, etc.
 			if len(rw)>=6:
-				if rw[5]>=(-360.) and rw[5]<=360.:
-					thiseq.eqtheta = rw[5] # some simple validation.
+				if rw[5] > 0.: thiseq.eqeps = rw[5]
+			if len(rw)>=6:
+				if rw[6]>=(-360.) and rw[6]<=360.:
+					thiseq.eqtheta = rw[6] # some simple validation.
 			#
 			# and after all that, did we get an epsilon?
 			if thiseq.eqeps==None: thiseq.eqeps=epsDefault	# so, at this point eqeps is either what was given or default.
