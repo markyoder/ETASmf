@@ -2272,8 +2272,8 @@ class earthquake(locbase):
 			# at a rupture length distance (for now. later versions might be more sophisticated).
 			#
 			# start with an omori-like distribution, combine with poisson dist. for now, assume k=1, l_r.
-			omori_fact   = .5
-			poisson_fact = .5
+			omori_fact   = .25
+			poisson_fact = .75
 			op_sum = omori_fact + poisson_fact
 			#
 			# normalize these factors (which we will one day parameterize)
@@ -2283,7 +2283,8 @@ class earthquake(locbase):
 			radialDens_omori   = (q-1.0)*(r0ssim**(q-1.0))*(r0ssim + rprime)**(-q)
 			#poisson_mean_r = r0ssim		# or maybe rupture len?
 			poisson_mean_r = .5*lrupture	#
-			radialDens_poisson = (1.0/poisson_mean_r)*(rprime/poisson_mean_r)*math.exp(-rprime/poisson_mean_r)
+			#radialDens_poisson = (1.0/poisson_mean_r)*(rprime/poisson_mean_r)*math.exp(-rprime/poisson_mean_r)
+			radialDens_poisson = (rprime/poisson_mean_r)*math.exp(-rprime/poisson_mean_r)
 			#
 			radialDens = omori_fact*radialDens_omori + poisson_fact*radialDens_poisson
 			#
