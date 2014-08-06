@@ -747,7 +747,8 @@ class BASScast(object):
 	def xyztofile(self, outfile='BASSxyz.dat', minlogz=None):
 		# this writes a format like lon \t lat \t z \n, ... to a file. do we need a version to write to a list, or can we avoid risking the memory?
 		fout=open(outfile,'w')
-		fout.write('#BASScast xyz:\n#lon, lat, log_10(z)\n#!dx=%f\tdy=%f\tlog(z)_min=%s\n' % (self.sites[0].dxdy[0], self.sites[0].dxdy[1], str(minlogz)))
+		fout.write('#BASScast xyz:\n#lon, lat, log_10(z)\n#!dx=%f\tdy=%f\tlog(z)_min=%s, m_c=%f\n' % (self.sites[0].dxdy[0], self.sites[0].dxdy[1], str(minlogz), self.mc))
+		fout.write('# this is a grid representation of Yoder et al. (2014)/NASA E-DECIDER ETAS. z ~ number of earthquakes/km**2 (noting that this is for m>m_c\n')
 		for s in self.sites:
 			lz=math.log10(s.z)
 			if minlogz!=None and lz<minlogz: continue
