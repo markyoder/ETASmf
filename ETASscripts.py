@@ -12,6 +12,8 @@ import matplotlib.dates as mpd
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 
+import multiprocessing as mpp
+
 kmldir='kml'
 catdir='kml'
 
@@ -103,6 +105,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	#print dt0, dt1
 	if bigquakes==None: bigquakes=[]
 	#
+	figname = kmldir + '/' + fnameroot + '_fig.png'
 	kmlfile = kmldir + '/' + fnameroot + 'conts.kml'
 	kmzfile = kmldir + '/' + fnameroot + '.kmz'
 	catfile = kmldir + '/' + fnameroot + '-BASS' + '.cat'
@@ -181,6 +184,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 		mfb.BASScastContourMap()
 		x,y=mfb.cm(bigquakes[0][2], bigquakes[0][1])
 		plt.plot([x], [y], '*', ms=15, alpha=.7)
+		plt.savefig(figname)
 		#
 	#
 	return mfb
@@ -326,10 +330,35 @@ def makeParkfieldETAS(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.tim
 		bigquakes=[[mpd.date2num(dtm.datetime(2004, 9, 28, 17, 15, 24,0, tzinfo=pytz.timezone('UTC'))), 35.82, -120.37, 6.0]]
 	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, rtype=rtype)
 #
-def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim'):
+def EMC_ApplGeo_sequence():
+	# a sequence of EMC ETAS (potentially) for the Applied Geology chapter.
+	dates = [dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,5, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,7, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,10, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,20, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,30, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,5,30, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')) ]
+	#
+	# set up a pool for multi-processing.
+	n_procs = mpp.cpu_count()
+	my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu...
+	print "(hopefully) using %d cpus" % my_cpu_count
+	mypool = mpp.Pool(my_cpu_count)
+	#
+	for i, this_date in enumerate(dates):
+		#A = makeElMayorETAS(todt=this_date, doplot=True, fnameroot='EMC-AG')
+		prams_dict = {'todt':this_date, 'doplot':True, 'fignum':i+2, 'fnameroot':'EMC-AG', 'kmldir':kmldir+'-EMC-AG', 'catdir':kmldir+'-EMC-AG'}
+		#
+		# pass positional arguments in a tuple (), then key_work args in a dict.
+		mypool.apply_async(makeElMayorETAS, (), prams_dict)
+		#
+		print "queued ETAS: %s" % str(this_date)
+	mypool.close()
+	mypool.join()
+	#
+	print "finished."
+	#
+	return None
+#
+def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=5, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, fignum=1, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim'):
 	#
 	if bigquakes==None:
-		bigquakes=[[mpd.date2num(dtm.datetime(2010, 4, 4, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))), 32.13, -115.3, 7.2]]
+		bigquakes=[[mpd.date2num(dtm.datetime(2010, 4, 4, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))), 32.286200, -115.295300, 7.2]]
 	z= makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
 	#
 	z.BASScastContourMap(maxNquakes=10)
@@ -783,8 +812,8 @@ def etasFigs7():
 	c.BASScastContourMap(maxNquakes=10)
 	x,y=c.cm(-115.303, 32.128)
 	plt.figure(1)
-	esp.plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
-	esp.plt.plot([x], [y], 'k*', ms=18, alpha=.9, zorder=10)
+	plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
+	plt.plot([x], [y], 'k*', ms=18, alpha=.9, zorder=10)
 	#
 	plt.savefig('figs/elmayorETAS-ssim-20100401.png')
 	#
@@ -792,8 +821,8 @@ def etasFigs7():
 	c.BASScastContourMap(maxNquakes=10)
 	x,y=c.cm(-115.303, 32.128)
 	plt.figure(1)
-	esp.plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
-	esp.plt.plot([x], [y], 'k*', ms=18, alpha=.9, zorder=10)
+	plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
+	plt.plot([x], [y], 'k*', ms=18, alpha=.9, zorder=10)
 	#
 	plt.savefig('figs/elmayorETAS-threshSatPL-20100401.png')
 	
