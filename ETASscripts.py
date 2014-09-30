@@ -133,6 +133,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	print "addquakes: %d" % len(addquakes)
 	if len(addquakes)>0:
 		for qk in addquakes:
+			# using "hasattr()" would be a better way of determining data type (date or float).
 			try:
 				dtyr = qk[0].year
 			except:
@@ -373,11 +374,11 @@ def makeSocalETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, cont
 		bigquakes=[]
 	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, rtype=rtype)
 
-def makeNorcalETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='norcal', catlen=5.0*365.0, doplot=False, lons=[-127.5, -117.5], lats=[36.75, 42.0], bigquakes=None, bigmag=5.5, eqtheta=None, eqeps=None, fitfactor=5.0):
+def makeNorcalETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='norcal', catlen=5.0*365.0, doplot=False, lons=[-127.5, -117.5], lats=[36.75, 42.0], bigquakes=None, bigmag=5.5, eqtheta=None, eqeps=None, fitfactor=5.0, addquakes=[]):
 	#
 	if bigquakes==None:
 		bigquakes=[]
-	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
+	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, addquakes=addquakes)
 #
 def makeCalnevFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='calnev', catlen=5.0*365.0, doplot=False, lons=[-127.5, -114.0], lats=[30.5, 42.5], bigquakes=None, bigmag=5.0):
 	#
