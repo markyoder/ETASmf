@@ -370,7 +370,7 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 	dates = [mainshock_datetime - my_dt(days=1), mainshock_datetime + my_dt(hours=1)]
 	#
 	while dates[-1]<mainshock_datetime+my_dt(days=3):
-		dates+=[dates[-1]+my_dt(hours=6)]
+		dates+=[dates[-1]+my_dt(hours=4)]
 	while dates[-1]<mainshock_datetime+my_dt(days=5):
 		dates+=[dates[-1]+my_dt(hours=6)]
 	while dates[-1]<mainshock_datetime+my_dt(days=10):
