@@ -419,10 +419,10 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 		x,y=z.cm(napa_eq['lon'], napa_eq['lat'])
 		plt.figure(i)
 		plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
-		plt.title('Napa ETAS: %s' % str(z.fcdate)
+		plt.title('Napa ETAS: %s' % str(z.fcdate))
 		#
 		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(z.fcdate)))
-		cPickle.pickle('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate))
+		cPickle.pickle('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)))
 	#
 	return return_etases
 #
