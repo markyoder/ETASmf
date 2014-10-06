@@ -1716,14 +1716,15 @@ class forecastsite(locbase):
 		# for this individual site (presumably, for all sites but righ here for this site), calculate
 		# contribution from all earthquakes.
 		# note that this is not integrated -- z ~ n/[sec][km^2]
-		dzs=[]
+		#dzs=[]
 		# add mpp...
-		pool = mpp.Pool()
-		dzs0 = []
-		for equake in equakes:
-			dzs+=[equake.localIntensity(inloc=self.loc, intime=self.eventftime)]
+		#pool = mpp.Pool()
+		#dzs0 = []
+		#for equake in equakes:
+		#	dzs+=[equake.localIntensity(inloc=self.loc, intime=self.eventftime)]
+		dzs = [equake.localIntensity(inloc=self.loc, intime=self.eventftime) for equake in equakes]
 		#
-		dzs0 = [pool.apply_async(equake.localIntensity, kwds={'inloc':self.loc, 'intime':self.eventftime} for equake in equakes]	
+		#dzs0 = [pool.apply_async(equake.localIntensity, kwds={'inloc':self.loc, 'intime':self.eventftime} for equake in equakes]	
 		#result_set_list = [pool.apply_async(forecast_metric_1, args = (g, m0, b_0, nyquist_factor)) for g in G]
 		return dzs
 	
