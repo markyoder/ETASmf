@@ -332,8 +332,22 @@ def makeParkfieldETAS(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.tim
 #
 def EMC_ApplGeo_sequence():
 	# a sequence of EMC ETAS (potentially) for the Applied Geology chapter.
-	dates = [dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,5, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,7, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,10, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,20, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,30, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,5,30, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')) ]
+	dates = [dtm.datetime(2010,4,1,  tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,5, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,7, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,10, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,20, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,30, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,5,30, tzinfo=pytz.timezone('UTC')) ]
 	#
+	#dates=[]		# temporarily..
+	#
+	# event specific ETAS:
+	# following the mainshock (and nearly simultaneous m=5.7 SE of the mainshock)
+	dates += [dtm.datetime(2010,4,4, 0, 40,  tzinfo=pytz.timezone('UTC'))] # this is the wrong date, but interestingly enough, it
+																			# appears to show a foreshock.
+	dates += [dtm.datetime(2010,4,5, 0, 40,  tzinfo=pytz.timezone('UTC'))]
+	dates += [dtm.datetime(2010,4,5, 1, 25, tzinfo=pytz.timezone('UTC'))]
+	dates += [dtm.datetime(2010,4,8, 18, 44,  tzinfo=pytz.timezone('UTC'))]
+	dates += [dtm.datetime(2010,6,15, 6, 26, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))]
+	#
+	dates.sort()
+	#
+	this_kml_dir = kmldir+'-EMC-AG'
 	# set up a pool for multi-processing.
 	n_procs = mpp.cpu_count()
 	my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu...
@@ -342,10 +356,16 @@ def EMC_ApplGeo_sequence():
 	#
 	for i, this_date in enumerate(dates):
 		#A = makeElMayorETAS(todt=this_date, doplot=True, fnameroot='EMC-AG')
-		prams_dict = {'todt':this_date, 'doplot':True, 'fignum':i+2, 'fnameroot':'EMC-AG', 'kmldir':kmldir+'-EMC-AG', 'catdir':kmldir+'-EMC-AG'}
+		prams_dict = {'todt':this_date, 'doplot':False, 'fignum':i+2, 'fnameroot':'EMC-AG' + str(this_date), 'kmldir':this_kml_dir, 'catdir':this_kml_dir}
 		#
 		# pass positional arguments in a tuple (), then key_work args in a dict.
-		mypool.apply_async(makeElMayorETAS, (), prams_dict)
+		# this is the correct syntax, but pyplot requires more careful handling (loop not in main thread or something--
+		# pyplot is modal). for now, let's just run them one at a time.
+		#mypool.apply_async(makeElMayorETAS, (), prams_dict)
+		A = makeElMayorETAS(**prams_dict)
+		#
+		# sloppy, but we'll get away with it:
+		plt.savefig(this_kml_dir + '/EMC-ApplGeo-%s.png' % str(this_date))
 		#
 		print "queued ETAS: %s" % str(this_date)
 	mypool.close()
