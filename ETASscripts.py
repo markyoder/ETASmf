@@ -13,6 +13,7 @@ import matplotlib.colors as colors
 import matplotlib.cm as cmx
 
 import multiprocessing as mpp
+import cPickle
 
 kmldir='kml'
 catdir='kml'
@@ -331,10 +332,121 @@ def makeParkfieldETAS(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.tim
 		bigquakes=[[mpd.date2num(dtm.datetime(2004, 9, 28, 17, 15, 24,0, tzinfo=pytz.timezone('UTC'))), 35.82, -120.37, 6.0]]
 	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, rtype=rtype)
 #
+class getter(object):
+	# a scilly container class to semi-emulate an MPP results 
+	def __init__(self, obj):
+		self.obj=obj
+	def get(self):
+		return self.obj
+	#
+#
+def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167]):
+	# Bob Anderson didn't like the EMC sequence because it was not "California". so we'll do napa. let's pull back a bit to show
+	# the potentially related Clear Lake, North-o-Clear Lake, and Parkfieldish events as well (apparenly along the same
+	# not fault?)
+	#
+	# local catalog:
+	'''
+	2014/01/02 09:32:27.53  38.7867 -122.7408   2.20  3.25   Mw   93  26    1 0.05  NC      72134726
+	2014/04/04 04:04:54.97  38.4493 -122.2540   8.22  3.63   Mw  213  67    1 0.20  NC      72193350
+	2014/08/05 12:40:01.22  38.2557 -122.3232   8.21  3.03   Mw  174  23    5 0.15  NC      72272361
+	2014/08/24 10:20:44.06  38.2155 -122.3117  11.25  6.02   Mw  397  28    4 0.18  NC      72282711
+	2014/08/24 10:21:10.84  38.7602 -122.7257   0.93  4.38   Md   26  57    2 0.13  NC      71086369
+	2014/08/24 10:21:45.44  38.2350 -122.3198   9.09  3.81   ML  122  50    4 0.17  NC      72282716
+	2014/08/24 10:24:44.25  38.2588 -122.3433  10.50  3.47   ML   96 102    5 0.11  NC      72282751
+	2014/08/24 12:47:12.56  38.2380 -122.3483   8.47  3.60   Mw  137  30    2 0.17  NC      72283201
+	2014/08/26 12:33:16.86  38.1782 -122.3015  12.33  3.90   Mw  282  41    7 0.17  NC      72284586
+	2014/08/31 08:56:20.84  38.2352 -122.3293   9.69  3.24   Mw  300  22    3 0.16  NC      72288561
+	'''
+	napa_eq = {'lat':38.2155, 'lon':-122.3117, 'mag':6.02, 'date_time':dtm.datetime(2014, 8, 24, 10, 20,44, int(.06*10**6.), tzinfo=pytz.timezone('UTC')), 'depth':11.25}
+	#
+	#lats = [35.3667, 39.7400]		# lat of Chico, lon of Eureka
+	#lons = [-124.1636, -119.0167]	# Bakersfield
+	#
+	#mainshock_datetime = dtm.datetime(2014, 8, 24, 3, 20, 44, tzinfo=pytz.timezone('US/Pacific'))
+	mainshock_datetime = napa_eq['date_time']
+	#
+	my_dt=dtm.timedelta
+	#
+	dates = [mainshock_datetime - my_dt(days=1), mainshock_datetime + my_dt(hours=1)]
+	#
+	while dates[-1]<mainshock_datetime+my_dt(days=3):
+		dates+=[dates[-1]+my_dt(hours=4)]
+	while dates[-1]<mainshock_datetime+my_dt(days=5):
+		dates+=[dates[-1]+my_dt(hours=6)]
+	while dates[-1]<mainshock_datetime+my_dt(days=10):
+		dates+=[dates[-1]+my_dt(days=1)]
+	#
+	# any "response" events?
+	# all the biggest events happen within minutes of the mainshock, but we can trigger a special run for
+	# the 26-aug m=3.9 event:
+	dates += [dtm.datetime(2014, 10, 26, 12, 33, 17, tzinfo=pytz.timezone('UTC')) + my_dt(hours=1)]	# and set the ETAS for 1 hour after the event, so we don't
+																# get full saturation.
+	#
+	dates.sort()
+	#
+	prams_dict = {'doplot':False, 'kmldir':'napa_ag', 'catdir':'napa_ag', 'lats':lats, 'lons':lons, 'gridsize':gridsize, 'contres':10, 'mc':2.5, 'bigquakes':None, 'bigmag':5., 'eqtheta':None, 'eqeps':None, 'fitfactor':5.}
+	#
+	# now, get to work.
+	if n_cpus==None: n_cpus=mpp.cpu_count()
+	#my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu ?
+	#mypool = mpp.Pool(n_cpus)
+	pool_results = []
+	#
+	for i, this_date in enumerate(dates):
+		prams_dict.update({'todt':this_date, 'fignum':i+2, 'fnameroot':'Napa-AG' + str(this_date), 'kmldir':'napa_ag', 'catdir':'napa_ag'})
+		#
+		# this almost works, but makeETASFCfiles() does some contouring, which invokes pyplot, which breaks...
+		#pool_results += [mypool.apply_async(makeETASFCfiles, (), prams_dict)]
+		# makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
+		#
+		#SPP it:
+		pool_results += [getter(makeETASFCfiles(**prams_dict))]
+		with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
+			cPickle.pickle(pool_results[-1].get(), f)
+		#
+	#mypool.close()
+	#mypool.join()
+	#
+	return_etases = []
+	#
+	# now, for each entry, pull the todt (?), make a map, save fig... serially.
+	for j, etas in enumerate(pool_results):
+		i=j+1
+		z=etas.get()
+		print "get() returns: ", z
+		return_etases+=[z]
+		plt.figure(i)
+		bcm = z.BASScastContourMap(maxNquakes=0, fignum=i)
+		x,y=z.cm(napa_eq['lon'], napa_eq['lat'])
+		plt.figure(i)
+		plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
+		plt.title('Napa ETAS: %s' % str(z.fcdate))
+		#
+		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(z.fcdate)))
+		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
+		#	cPickle.pickle(z, f)
+	#
+	return return_etases
+#
 def EMC_ApplGeo_sequence():
 	# a sequence of EMC ETAS (potentially) for the Applied Geology chapter.
-	dates = [dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,5, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,7, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,10, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,20, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,30, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,5,30, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')) ]
+	dates = [dtm.datetime(2010,4,1,  tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,5, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,7, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,10, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,20, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,4,30, tzinfo=pytz.timezone('UTC')), dtm.datetime(2010,5,30, tzinfo=pytz.timezone('UTC')) ]
 	#
+	#dates=[]		# temporarily..
+	#
+	# event specific ETAS:
+	# following the mainshock (and nearly simultaneous m=5.7 SE of the mainshock)
+	dates += [dtm.datetime(2010,4,4, 0, 40,  tzinfo=pytz.timezone('UTC'))] # this is the wrong date, but interestingly enough, it
+																			# appears to show a foreshock.
+	dates += [dtm.datetime(2010,4,5, 0, 40,  tzinfo=pytz.timezone('UTC'))]
+	dates += [dtm.datetime(2010,4,5, 1, 25, tzinfo=pytz.timezone('UTC'))]
+	dates += [dtm.datetime(2010,4,8, 18, 44,  tzinfo=pytz.timezone('UTC'))]
+	dates += [dtm.datetime(2010,6,15, 6, 26, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))]
+	#
+	dates.sort()
+	#
+	this_kml_dir = kmldir+'-EMC-AG'
 	# set up a pool for multi-processing.
 	n_procs = mpp.cpu_count()
 	my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu...
@@ -343,10 +455,17 @@ def EMC_ApplGeo_sequence():
 	#
 	for i, this_date in enumerate(dates):
 		#A = makeElMayorETAS(todt=this_date, doplot=True, fnameroot='EMC-AG')
-		prams_dict = {'todt':this_date, 'doplot':True, 'fignum':i+2, 'fnameroot':'EMC-AG', 'kmldir':kmldir+'-EMC-AG', 'catdir':kmldir+'-EMC-AG'}
+		prams_dict = {'todt':this_date, 'doplot':False, 'fignum':i+2, 'fnameroot':'EMC-AG' + str(this_date), 'kmldir':this_kml_dir, 'catdir':this_kml_dir}
 		#
 		# pass positional arguments in a tuple (), then key_work args in a dict.
-		mypool.apply_async(makeElMayorETAS, (), prams_dict)
+		# this is the correct syntax, but pyplot requires more careful handling (loop not in main thread or something--
+		# pyplot is modal). for now, let's just run them one at a time.
+		#mypool.apply_async(makeElMayorETAS, (), prams_dict)		# this falls to pieces during the plots. it is possible to
+																 	# pool() these and just pull them back for plotting.
+		A = makeElMayorETAS(**prams_dict)
+		#
+		# sloppy, but we'll get away with it:
+		plt.savefig(this_kml_dir + '/EMC-ApplGeo-%s.png' % str(this_date))
 		#
 		print "queued ETAS: %s" % str(this_date)
 	mypool.close()

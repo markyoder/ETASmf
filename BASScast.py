@@ -1732,16 +1732,8 @@ class forecastsite(locbase):
 		# add mpp...
 		#pool = mpp.Pool()
 		#dzs0 = []
-		return [equake.localIntensity(inloc=self.loc, intime=self.eventftime) for equake in equakes]
-		#for equake in equakes:
-		#	dzs+=[equake.localIntensity(inloc=self.loc, intime=self.eventftime)]
 		#
-		#dzs0 = [pool.apply_async(equake.localIntensity, kwds={'inloc':self.loc, 'intime':self.eventftime}) for equake in equakes]
-		#pool.close()
-		#pool.join()	
-		#result_set_list = [pool.apply_async(forecast_metric_1, args = (g, m0, b_0, nyquist_factor)) for g in G]
-		#dzs = [x.get() for x in dzs0]
-		#return dzs
+		return [equake.localIntensity(inloc=self.loc, intime=self.eventftime) for equake in equakes]
 	
 	def getz(self, equakes):
 		#print 'setting z.'
