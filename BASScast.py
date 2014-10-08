@@ -128,7 +128,8 @@ class BASScast(object):
 			# in this case, do a dynamic transform.
 			#xy=map(operator.itemgetter(1,2), incat)	# so this will be lat, lon
 			#xy.sort()	# and it's now sorted by lat, then lon.
-			incat.sort(key=operator.itemgetter(1))	# incat is now sorted by lat
+			#incat.sort(key=operator.itemgetter(1))	# incat is now sorted by lat
+			incat.sort(key = lambda x: (x[1], x[2]))
 			#
 			# should this be sorted by lat, lon?:
 			# i think:
@@ -137,6 +138,12 @@ class BASScast(object):
 		# add earthquakes and other catalog related bits.
 		catindex=0
 		for rw in incat:
+			# ... and to accomplish mpp, the whole contents of this loop needs to be wrapped into a single function.
+			# it may also be necessary (or at least desirable) to mitigate the dependency on class scope (aka,
+			# modularize the function -- pass all values directly, rather than pull them from "self"). 1) classes
+			# seem to not pickel into mpp properly, 2) if possible, we want to avoid having to pickle the whole
+			# class anyway.
+			#
 			# we'll want to introduce the elliptical convolution with fault map or local seismicity. for now, fudge it.
 			# each rw: [dtm, lat, lon, mag, ...]
 			# note: loc[] for earthquake is [lon, lat]; we receive incat as lat,lon
@@ -154,7 +161,10 @@ class BASScast(object):
 			# passing long catalog entries where cols [4,5] are NOT theta,epsilon.
 			# this is a problem in many existing scripts since rw[4] is often depth. this functionality was put in place for one of the
 			# scenario exercises, right? maybe we can (in the short term) correct it there and expand this to at least rw[5], rw[6].
-			# eventually, replace list-rows with dictionary-rows.
+			# eventually, replace list-rows with dictionary-rows... or a structured array.
+			# note also that a structured array (recarray, or "record array" -- all numpy)
+			# can (i think) be shared directly in mpp processing.
+			#
 			# for now, use len()>6, etc.
 			if len(rw)>=6:
 				if rw[5] > 0.: thiseq.eqeps = rw[5]
@@ -260,6 +270,8 @@ class BASScast(object):
 			#
 			catindex+=1
 			#
+		#####
+		#
 		self.midlat = .5*(sum(self.latrange))
 		#
 		# for now, let's use gridsize x gridsize (in degrees) size elements (rather than project into a proper rectangular coord-system,
@@ -1716,16 +1728,20 @@ class forecastsite(locbase):
 		# for this individual site (presumably, for all sites but righ here for this site), calculate
 		# contribution from all earthquakes.
 		# note that this is not integrated -- z ~ n/[sec][km^2]
-		dzs=[]
+		#dzs=[]
 		# add mpp...
-		pool = mpp.Pool()
-		dzs0 = []
-		for equake in equakes:
-			dzs+=[equake.localIntensity(inloc=self.loc, intime=self.eventftime)]
+		#pool = mpp.Pool()
+		#dzs0 = []
+		return [equake.localIntensity(inloc=self.loc, intime=self.eventftime) for equake in equakes]
+		#for equake in equakes:
+		#	dzs+=[equake.localIntensity(inloc=self.loc, intime=self.eventftime)]
 		#
-		dzs0 = [pool.apply_async(equake.localIntensity, kwds={'inloc':self.loc, 'intime':self.eventftime} for equake in equakes]	
+		#dzs0 = [pool.apply_async(equake.localIntensity, kwds={'inloc':self.loc, 'intime':self.eventftime}) for equake in equakes]
+		#pool.close()
+		#pool.join()	
 		#result_set_list = [pool.apply_async(forecast_metric_1, args = (g, m0, b_0, nyquist_factor)) for g in G]
-		return dzs
+		#dzs = [x.get() for x in dzs0]
+		#return dzs
 	
 	def getz(self, equakes):
 		#print 'setting z.'
