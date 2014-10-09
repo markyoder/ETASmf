@@ -340,7 +340,7 @@ class getter(object):
 		return self.obj
 	#
 #
-def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167], dates=None):
+def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167], dates=None):
 	# Bob Anderson didn't like the EMC sequence because it was not "California". so we'll do napa. let's pull back a bit to show
 	# the potentially related Clear Lake, North-o-Clear Lake, and Parkfieldish events as well (apparenly along the same
 	# not fault?)
