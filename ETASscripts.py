@@ -340,7 +340,7 @@ class getter(object):
 		return self.obj
 	#
 #
-def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167]):
+def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.5, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167]):
 	# Bob Anderson didn't like the EMC sequence because it was not "California". so we'll do napa. let's pull back a bit to show
 	# the potentially related Clear Lake, North-o-Clear Lake, and Parkfieldish events as well (apparenly along the same
 	# not fault?)
@@ -385,13 +385,13 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 	#
 	dates.sort()
 	#
-	prams_dict = {'doplot':False, 'kmldir':'napa_ag', 'catdir':'napa_ag', 'lats':lats, 'lons':lons, 'gridsize':gridsize, 'contres':10, 'mc':2.5, 'bigquakes':None, 'bigmag':5., 'eqtheta':None, 'eqeps':None, 'fitfactor':5.}
+	prams_dict = {'doplot':False, 'kmldir':'napa_ag', 'catdir':'napa_ag', 'lats':lats, 'lons':lons, 'gridsize':gridsize, 'contres':10, 'mc':mc, 'bigquakes':None, 'bigmag':5., 'eqtheta':None, 'eqeps':None, 'fitfactor':5.}
 	#
 	# now, get to work.
 	if n_cpus==None: n_cpus=mpp.cpu_count()
 	#my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu ?
 	#mypool = mpp.Pool(n_cpus)
-	pool_results = []
+	return_etases = []
 	#
 	for i, this_date in enumerate(dates):
 		prams_dict.update({'todt':this_date, 'fignum':i+2, 'fnameroot':'Napa-AG' + str(this_date), 'kmldir':'napa_ag', 'catdir':'napa_ag'})
@@ -401,29 +401,25 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 		# makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
 		#
 		#SPP it:
-		pool_results += [getter(makeETASFCfiles(**prams_dict))]
-		with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
-			cPickle.pickle(pool_results[-1].get(), f)
+		this_etas = makeETASFCfiles(**prams_dict)
+		#print "this_etas: ", this_etas
 		#
-	#mypool.close()
-	#mypool.join()
-	#
-	return_etases = []
-	#
-	# now, for each entry, pull the todt (?), make a map, save fig... serially.
-	for j, etas in enumerate(pool_results):
-		i=j+1
-		z=etas.get()
-		print "get() returns: ", z
-		return_etases+=[z]
-		plt.figure(i)
-		bcm = z.BASScastContourMap(maxNquakes=0, fignum=i)
-		x,y=z.cm(napa_eq['lon'], napa_eq['lat'])
-		plt.figure(i)
+		# pickling throws a "can't pickle instancemethod objects" exception. maybe because we return the object instead 
+		# directly (and locally)? of declaring it? ... nope. that doesn't help either.
+		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_date)), 'w') as f:
+		#	cPickle.dump(this_etas, f)
+		return_etases += [getter(this_etas)]
+		#
+		fnum = 2
+		#
+		plt.figure(fnum)
+		bcm = this_etas.BASScastContourMap(maxNquakes=0, fignum=fnum)
+		x,y=this_etas.cm(napa_eq['lon'], napa_eq['lat'])
+		plt.figure(fnum)
 		plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
-		plt.title('Napa ETAS: %s' % str(z.fcdate))
+		plt.title('Napa ETAS: %s\n\n' % str(this_etas.fcdate))
 		#
-		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(z.fcdate)))
+		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(this_etas.fcdate)))
 		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
 		#	cPickle.pickle(z, f)
 	#
