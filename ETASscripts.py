@@ -405,28 +405,7 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 		this_etas = makeETASFCfiles(**prams_dict)
 		#print "this_etas: ", this_etas
 		#
-<<<<<<< HEAD
-	#mypool.close()
-	#mypool.join()
-	#
-	return_etases = []
-	#
-	# now, for each entry, pull the todt (?), make a map, save fig... serially.
-	for j, etas in enumerate(pool_results):
-		i=j+1
-		z=etas.get()
-		print "get() returns: ", z
-		#return_etases+=[z]
-		plt.figure(i)
-		bcm = z.BASScastContourMap(maxNquakes=0, fignum=i)
-		x,y=z.cm(napa_eq['lon'], napa_eq['lat'])
-		plt.figure(i)
-=======
-		# pickling throws a "can't pickle instancemethod objects" exception. maybe because we return the object instead 
-		# directly (and locally)? of declaring it? ... nope. that doesn't help either.
-		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_date)), 'w') as f:
-		#	cPickle.dump(this_etas, f)
-		return_etases += [getter(this_etas)]
+#return_etases += [getter(this_etas)]
 		#
 		fnum = 2
 		#
@@ -434,13 +413,16 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 		bcm = this_etas.BASScastContourMap(maxNquakes=0, fignum=fnum)
 		x,y=this_etas.cm(napa_eq['lon'], napa_eq['lat'])
 		plt.figure(fnum)
->>>>>>> 4b03e814927ad892abb877e16ae99b6c1be4dcf9
+		#
 		plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
 		plt.title('Napa ETAS: %s\n\n' % str(this_etas.fcdate))
 		#
 		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(this_etas.fcdate)))
-		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
-		#	cPickle.pickle(z, f)
+		try:
+			with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
+				cPickle.pickle(this_etas, f)
+		except Exception as excep:
+			print "failed to pickle: ", str(excep)
 	#
 	return return_etases
 #
