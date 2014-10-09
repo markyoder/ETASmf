@@ -340,7 +340,7 @@ class getter(object):
 		return self.obj
 	#
 #
-def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.5, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167]):
+def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167], dates=None):
 	# Bob Anderson didn't like the EMC sequence because it was not "California". so we'll do napa. let's pull back a bit to show
 	# the potentially related Clear Lake, North-o-Clear Lake, and Parkfieldish events as well (apparenly along the same
 	# not fault?)
@@ -368,19 +368,20 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.5, lats = [35.3667, 39.
 	#
 	my_dt=dtm.timedelta
 	#
-	dates = [mainshock_datetime - my_dt(days=1), mainshock_datetime + my_dt(hours=1)]
-	#
-	while dates[-1]<mainshock_datetime+my_dt(days=3):
-		dates+=[dates[-1]+my_dt(hours=4)]
-	while dates[-1]<mainshock_datetime+my_dt(days=5):
-		dates+=[dates[-1]+my_dt(hours=6)]
-	while dates[-1]<mainshock_datetime+my_dt(days=10):
-		dates+=[dates[-1]+my_dt(days=1)]
-	#
-	# any "response" events?
-	# all the biggest events happen within minutes of the mainshock, but we can trigger a special run for
-	# the 26-aug m=3.9 event:
-	dates += [dtm.datetime(2014, 10, 26, 12, 33, 17, tzinfo=pytz.timezone('UTC')) + my_dt(hours=1)]	# and set the ETAS for 1 hour after the event, so we don't
+	if dates == None:
+		dates = [mainshock_datetime - my_dt(days=1), mainshock_datetime + my_dt(hours=1)]
+		#
+		while dates[-1]<mainshock_datetime+my_dt(days=3):
+			dates+=[dates[-1]+my_dt(hours=4)]
+		while dates[-1]<mainshock_datetime+my_dt(days=5):
+			dates+=[dates[-1]+my_dt(hours=6)]
+		while dates[-1]<mainshock_datetime+my_dt(days=10):
+			dates+=[dates[-1]+my_dt(days=1)]
+		#
+		# any "response" events?
+		# all the biggest events happen within minutes of the mainshock, but we can trigger a special run for
+		# the 26-aug m=3.9 event:
+		dates += [dtm.datetime(2014, 10, 26, 12, 33, 17, tzinfo=pytz.timezone('UTC')) + my_dt(hours=1)]	# and set the ETAS for 1 hour after the event, so we don't
 																# get full saturation.
 	#
 	dates.sort()
@@ -404,6 +405,23 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.5, lats = [35.3667, 39.
 		this_etas = makeETASFCfiles(**prams_dict)
 		#print "this_etas: ", this_etas
 		#
+<<<<<<< HEAD
+	#mypool.close()
+	#mypool.join()
+	#
+	return_etases = []
+	#
+	# now, for each entry, pull the todt (?), make a map, save fig... serially.
+	for j, etas in enumerate(pool_results):
+		i=j+1
+		z=etas.get()
+		print "get() returns: ", z
+		#return_etases+=[z]
+		plt.figure(i)
+		bcm = z.BASScastContourMap(maxNquakes=0, fignum=i)
+		x,y=z.cm(napa_eq['lon'], napa_eq['lat'])
+		plt.figure(i)
+=======
 		# pickling throws a "can't pickle instancemethod objects" exception. maybe because we return the object instead 
 		# directly (and locally)? of declaring it? ... nope. that doesn't help either.
 		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_date)), 'w') as f:
@@ -416,6 +434,7 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.5, lats = [35.3667, 39.
 		bcm = this_etas.BASScastContourMap(maxNquakes=0, fignum=fnum)
 		x,y=this_etas.cm(napa_eq['lon'], napa_eq['lat'])
 		plt.figure(fnum)
+>>>>>>> 4b03e814927ad892abb877e16ae99b6c1be4dcf9
 		plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
 		plt.title('Napa ETAS: %s\n\n' % str(this_etas.fcdate))
 		#
