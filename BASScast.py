@@ -56,11 +56,11 @@ class BASScast(object):
 							# n -> n0*10^(mc-rateMag.)
 	mapres='i'		# basemap map resolution.
 	#
-	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim'):
-		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype)
+	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None):
+		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype, p_quakes=p_quakes)
 		#
 	#
-	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0.0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim'):
+	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0.0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None):
 		#
 		# input parameters notes:
 		# lats, lons: define the map lat, lon ranges. if None, we estimate them from the catalog. if provided, we explicitly set the map prams.
@@ -81,6 +81,7 @@ class BASScast(object):
 		self.fitfactor=fitfactor
 		#if rtype not in ('ssim', 'omorisat', 'satpl'): rtype='ssim'
 		self.rtype=rtype
+		self.p_quakes=p_quakes
 		#
 		self.quakes=[]
 		while len(self.quakes)>0: self.quakes.pop()
@@ -147,7 +148,7 @@ class BASScast(object):
 			# we'll want to introduce the elliptical convolution with fault map or local seismicity. for now, fudge it.
 			# each rw: [dtm, lat, lon, mag, ...]
 			# note: loc[] for earthquake is [lon, lat]; we receive incat as lat,lon
-			self.quakes+=[earthquake(mag=rw[3], loc=[rw[2], rw[1]], evtime=rw[0], mc=mc, rtype=self.rtype)]
+			self.quakes+=[earthquake(mag=rw[3], loc=[rw[2], rw[1]], evtime=rw[0], mc=mc, rtype=self.rtype, p=p_quakes)]
 			#
 			thiseq=self.quakes[-1]
 			#
@@ -317,6 +318,8 @@ class BASScast(object):
 		return err
 		
 	def linfit(self, p, X, Y, W=None, full_output=False):
+		# consider replacing this with numpy.linalge.linfit() (i think... something like that) or just scipy.optimize.curve_fit()
+		# do we use self.errs for anything? (doesn't look like it).
 		if W==None:
 			W=scipy.ones(len(Y))
 		#p=scipy.array([0.0, 0.0])
@@ -1782,6 +1785,7 @@ class earthquake(locbase):
 	def initialize(self, mag=5.0, loc=[0.0,0.0], evtime=100.0, mc=2.0, drho=5.25, p=1.1, dmstar=1.2, dm=1.0, alpha = 2.28, eqtheta=0.0, eqeps=1.0, rtype='ssim'):
 		# note scaling exponents are pre-declared.
 		self.drho=float(drho)
+		p=(1.1,p)	# if p==None: p=1.1
 		self.p=float(p)
 		self.dmstar=dmstar	# mag difference for a primary sequence (a mainshock and its aftershocks)
 		self.dm=dm				# mag difference for a full (compound) aftershock sequence
