@@ -419,7 +419,7 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.
 		#
 		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(this_etas.fcdate)))
 		try:
-			with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
+			with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_etas.fcdate)), 'w') as f:
 				cPickle.pickle(this_etas, f)
 		except Exception as excep:
 			print "failed to pickle: ", str(excep)
