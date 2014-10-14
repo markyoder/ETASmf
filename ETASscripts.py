@@ -98,7 +98,7 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 #
 tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
-def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0):
+def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	dt1=todt
 	dt0=dt1-dtm.timedelta(days=catlen)
@@ -152,7 +152,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 		cat.sort(key=lambda x: x[0])
 	#
 	mfb=None
-	mfb=bcp.BASScast(incat=cat, fcdate=dt1, gridsize=gridsize, contres=contres, mc=mc, eqeps=eqeps, eqtheta=eqtheta, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, rtype=rtype)
+	mfb=bcp.BASScast(incat=cat, fcdate=dt1, gridsize=gridsize, contres=contres, mc=mc, eqeps=eqeps, eqtheta=eqtheta, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, rtype=rtype, p_quakes=p_quakes, p_map=p_map)
 	print "quakeLen: %d, %d" % (len(mfb.quakes),len(cat))
 	#
 	#cbs=mfb.makeColorbar(cset=mfb.conts, colorbarname='%s/%s' % (kmldir, cbarname))
@@ -472,11 +472,11 @@ def EMC_ApplGeo_sequence():
 	#
 	return None
 #
-def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=5, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, fignum=1, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim'):
+def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=5, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, fignum=1, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim', p_quakes=None, p_map=None):
 	#
 	if bigquakes==None:
 		bigquakes=[[mpd.date2num(dtm.datetime(2010, 4, 4, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))), 32.286200, -115.295300, 7.2]]
-	z= makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
+	z= makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, p_quakes=p_quakes, p_map=p_map)
 	#
 	z.BASScastContourMap(maxNquakes=10)
 	x,y=z.cm(-115.303, 32.128)
