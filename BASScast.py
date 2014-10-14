@@ -56,11 +56,11 @@ class BASScast(object):
 							# n -> n0*10^(mc-rateMag.)
 	mapres='i'		# basemap map resolution.
 	#
-	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim'):
-		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype)
+	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None):
+		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype, p_quakes=p_quakes, p_map=p_map)
 		#
 	#
-	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0.0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim'):
+	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0.0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None, map_projection='cyl'):
 		#
 		# input parameters notes:
 		# lats, lons: define the map lat, lon ranges. if None, we estimate them from the catalog. if provided, we explicitly set the map prams.
@@ -73,16 +73,19 @@ class BASScast(object):
 		if eqtheta!=None and abs(float(eqtheta))>0.0 and eqeps==None: eqeps = epsDefault
 		# incat: [ [dtm, lat, lon, mag, (depth?)], [], ... ] (consistent with ypp.eqcatalog() format).
 		# note: catalog dates/times must be in seconds (or convert all the scaling bits to days-- yuck).
-		self.mc=mc
-		self.contres=contres
-		self.gridsize=gridsize
-		self.fcdate=fcdate
+		self.mc = mc
+		self.contres = contres
+		self.gridsize = gridsize
+		self.fcdate = fcdate
 		self.fcdatef = mpd.date2num(fcdate)*days2secs
-		self.fitfactor=fitfactor
+		self.fitfactor = fitfactor
 		#if rtype not in ('ssim', 'omorisat', 'satpl'): rtype='ssim'
-		self.rtype=rtype
+		self.rtype = rtype
+		self.p_quakes = p_quakes
+		self.p_map = p_map
+		self.map_projection = map_projection
 		#
-		self.quakes=[]
+		self.quakes = []
 		while len(self.quakes)>0: self.quakes.pop()
 		#
 		self.contour_intervals=contour_intervals
@@ -147,7 +150,7 @@ class BASScast(object):
 			# we'll want to introduce the elliptical convolution with fault map or local seismicity. for now, fudge it.
 			# each rw: [dtm, lat, lon, mag, ...]
 			# note: loc[] for earthquake is [lon, lat]; we receive incat as lat,lon
-			self.quakes+=[earthquake(mag=rw[3], loc=[rw[2], rw[1]], evtime=rw[0], mc=mc, rtype=self.rtype)]
+			self.quakes+=[earthquake(mag=rw[3], loc=[rw[2], rw[1]], evtime=rw[0], mc=mc, rtype=self.rtype, p=p_quakes, p_map=p_map)]
 			#
 			thiseq=self.quakes[-1]
 			#
@@ -317,6 +320,8 @@ class BASScast(object):
 		return err
 		
 	def linfit(self, p, X, Y, W=None, full_output=False):
+		# consider replacing this with numpy.linalge.linfit() (i think... something like that) or just scipy.optimize.curve_fit()
+		# do we use self.errs for anything? (doesn't look like it).
 		if W==None:
 			W=scipy.ones(len(Y))
 		#p=scipy.array([0.0, 0.0])
@@ -509,7 +514,7 @@ class BASScast(object):
 		plt.ion()
 		#
 		cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
-		cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection='tmerc', lon_0=cntr[0], lat_0=cntr[1])
+		cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
 		self.cm=cm
 		cm.drawcoastlines(color='gray', zorder=1)
 		cm.drawcountries(color='gray', zorder=1)
@@ -529,7 +534,7 @@ class BASScast(object):
 		X,Y=cm(*numpy.meshgrid(X_i, Y_i))
 		#X,Y=cm(X_i, Y_i)
 		#		
-		cnts = self.getContourSet(X, Y, Z2d, self.contfact*self.contres)
+		cnts = self.getContourSet(X, Y, Z2d, contres=self.contfact*self.contres)
 		plt.colorbar()
 		plt.spectral()
 		#
@@ -1772,7 +1777,7 @@ class earthquake(locbase):
 	# scaling exponents:
 	#rho=1.37				# spatial scaling exponent
 	rho = 1.5			# let's see what this looks like...
-	#p = 1.1  			# Omori scaling exponent
+	#p = 1.05  			# Omori scaling exponent
 	sig = 1.68			# aftershock surface density exponent.
 	#alpha = 2.28		# rupture duration scaling exponent, nominally 
 	b=1.0
@@ -1786,13 +1791,16 @@ class earthquake(locbase):
 	lt0 = None	# Omori pram derrived from rupt. duration (typically log(t0) = lrupttime + 1.0)
 	lruptlen = None	# log rupt. len (in km).
 	#
-	def __init__(self, mag=5.0, loc=[0.0,0.0], evtime=1.0, mc=2.0, drho=5.25, p=1.1, dmstar=1.2, dm=1.0, alpha = 2.28, eqtheta=0.0, eqeps=1.0, rtype='ssim'):
-		return self.initialize(mag=mag, loc=loc, evtime=evtime, mc=mc, drho=drho, p=p, dmstar=dmstar, alpha=alpha, eqtheta=eqtheta, eqeps=eqeps, rtype=rtype)
+	def __init__(self, mag=5.0, loc=[0.0,0.0], evtime=1.0, mc=2.0, drho=5.25, p=1.05, dmstar=1.2, dm=1.0, alpha = 2.28, eqtheta=0.0, eqeps=1.0, rtype='ssim', p_map=None):
+		return self.initialize(mag=mag, loc=loc, evtime=evtime, mc=mc, drho=drho, p=p, dmstar=dmstar, alpha=alpha, eqtheta=eqtheta, eqeps=eqeps, rtype=rtype, p_map=p_map)
 	
-	def initialize(self, mag=5.0, loc=[0.0,0.0], evtime=100.0, mc=2.0, drho=5.25, p=1.1, dmstar=1.2, dm=1.0, alpha = 2.28, eqtheta=0.0, eqeps=1.0, rtype='ssim'):
+	def initialize(self, mag=5.0, loc=[0.0,0.0], evtime=100.0, mc=2.0, drho=5.25, p=1.05, dmstar=1.2, dm=1.0, alpha = 2.28, eqtheta=0.0, eqeps=1.0, rtype='ssim', p_map=None):
 		# note scaling exponents are pre-declared.
 		self.drho=float(drho)
+		if p==None: p=1.05
 		self.p=float(p)
+		self.p_map = p_map	# use this parameter to produce time-indepentent plots. aka, initialize ETAS with regular p~1.05, then use
+							# p_map=0.0 to produce a time-independent (aka, accumulate all events) map.
 		self.dmstar=dmstar	# mag difference for a primary sequence (a mainshock and its aftershocks)
 		self.dm=dm				# mag difference for a full (compound) aftershock sequence
 		self.mag=float(mag)
@@ -1831,7 +1839,8 @@ class earthquake(locbase):
 			#self.eventftime = mpd.date2num(self.eventDtm)
 		'''
 		#
-		self.dmp=1.0-math.log10(self.p-1.0)/self.b	# scaling exponent for initial rate 1/tau?
+		# 13 oct 2014: comment
+		#self.dmp=1.0-math.log10(self.p-1.0)/self.b	# scaling exponent for initial rate 1/tau?
 		#
 		# and of course, here is the debate. how do we calc. tau/t0? this method might work actually...
 		# the main problem from before was that the catalog was not being converted from days -> seconds.
@@ -1911,7 +1920,9 @@ class earthquake(locbase):
 		# noting that scaling will start at r=lrupt, so effectively r = lrupt + r'
 		#
 		return rate	
-	#	
+	#
+	'''	
+	# i think this is left over from an older (attempted) model... and can be chucked.
 	def dmprime(self, p=None, b=None):
 		# scaling decay exponent for initial omori rate (?), 1/tau:
 		if p==None: p=self.p
@@ -1919,7 +1930,8 @@ class earthquake(locbase):
 		dmp = 1.0-math.log10(p-1.0)/b	# usually dmp~2.0
 		#
 		return dmp
-	
+	'''
+	#
 	def getruptlen(self, m=None, dl0=None):
 		if m==None: m=self.mag
 		if dl0==None: dl0=self.dl0
@@ -1942,23 +1954,23 @@ class earthquake(locbase):
 		if ltau==None:
 			ltau=self.ltau
 		return 10**ltau
-	
+	#
+	'''
 	def ltauYoder(self, m=None, alpha=None, p=None, b=1.0, dmp=None, mc=None):
 		if mc==None: mc=self.mc
 		if p==None: p=self.p
 		if dmp==None: dmp=self.dmp
 		if m==None: m=self.mag
 		if alpha==None: alpha=self.alpha
-		if p==None: p=self.p
 		if b==None: b=self.b
-		if dmp==None: dmp=self.dmp
 		if mc==None: mc=self.mc
 		#
 		# actualy log(tau)
 		ltau=alpha*(p-1.0) + b*(dmp+mc) + m*((1.0-p)/2.0 - b)
 		#
 		return ltau
-
+	'''
+	#
 	def lDeltat(self, m=None, alpha=None):
 		if m==None: m=self.mag
 		if alpha==None: alpha=self.alpha
@@ -2027,7 +2039,7 @@ class earthquake(locbase):
 		dmstar=1.0
 		D=1.5	# fractal dimension	# from paper, <D>~1.35, but that seems too low. the best fits are D~1.5.
 		
-		self.p=1.05
+		#self.p=1.05
 		p=self.p
 		#rho=1.5
 		q=rho
@@ -2052,7 +2064,7 @@ class earthquake(locbase):
 		# then, calculate the relative spatial intensity by comparing N'(R) to N'(R->l_r).
 		# otherwise, we have to solve for the spatial (or Omori) parameters based on the 
 		# decayed rate (aka, new t0, tau parameters).
-		# also, assume the decay rate of the full (compound) sequence is p=1.0 (not 1.1),
+		# also, assume the decay rate of the full (compound) sequence is p=1.0 (not 1.05),
 		# and something similar for spatial decay (though the 1.37 numbers from Frolich probably
 		# represent the full sequence.
 		# do we integrate over the area here, or is that done by the calling function? (which
@@ -2149,7 +2161,18 @@ class earthquake(locbase):
 		# Omori rate: full rate of aftershocks.
 		#orate=self.omoriRate(t=t, t0=self.gett0(), tau=self.gettau(), p=1.0)
 		#orate=self.omoriRate(t=t, t0=10**self.lt0, tau=10**self.ltau, p=self.p)
-		orate = 1.0/(tau * (t0 + t)**self.p)
+		#
+		# 13 oct 2014:
+		#self.p_map=0.0
+		this_p = self.p
+		try:
+			if self.p_map != None: this_p = self.p_map
+		except:
+			# there is no special "map p" defined. use regular Omor p.
+			pass
+		#
+		orate = 1.0/(tau * (t0 + t)**this_p)
+		#orate = 1.0/(tau * (t0 + t)**self.p)
 		#
 		# and normalizing the radial distribution, we get:
 		# (note, this uses a straight omori-like distribution).
@@ -2373,7 +2396,7 @@ class earthquake(locbase):
 		# then, calculate the relative spatial intensity by comparing N'(R) to N'(R->l_r).
 		# otherwise, we have to solve for the spatial (or Omori) parameters based on the 
 		# decayed rate (aka, new t0, tau parameters).
-		# also, assume the decay rate of the full (compound) sequence is p=1.0 (not 1.1),
+		# also, assume the decay rate of the full (compound) sequence is p=1.0 (not 1.05),
 		# and something similar for spatial decay (though the 1.37 numbers from Frolich probably
 		# represent the full sequence.
 		# do we integrate over the area here, or is that done by the calling function? (which

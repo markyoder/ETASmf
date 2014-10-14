@@ -98,7 +98,7 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 #
 tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
-def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0):
+def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	dt1=todt
 	dt0=dt1-dtm.timedelta(days=catlen)
@@ -152,7 +152,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 		cat.sort(key=lambda x: x[0])
 	#
 	mfb=None
-	mfb=bcp.BASScast(incat=cat, fcdate=dt1, gridsize=gridsize, contres=contres, mc=mc, eqeps=eqeps, eqtheta=eqtheta, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, rtype=rtype)
+	mfb=bcp.BASScast(incat=cat, fcdate=dt1, gridsize=gridsize, contres=contres, mc=mc, eqeps=eqeps, eqtheta=eqtheta, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, rtype=rtype, p_quakes=p_quakes, p_map=p_map)
 	print "quakeLen: %d, %d" % (len(mfb.quakes),len(cat))
 	#
 	#cbs=mfb.makeColorbar(cset=mfb.conts, colorbarname='%s/%s' % (kmldir, cbarname))
@@ -340,7 +340,7 @@ class getter(object):
 		return self.obj
 	#
 #
-def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167]):
+def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167], dates=None):
 	# Bob Anderson didn't like the EMC sequence because it was not "California". so we'll do napa. let's pull back a bit to show
 	# the potentially related Clear Lake, North-o-Clear Lake, and Parkfieldish events as well (apparenly along the same
 	# not fault?)
@@ -368,30 +368,31 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 	#
 	my_dt=dtm.timedelta
 	#
-	dates = [mainshock_datetime - my_dt(days=1), mainshock_datetime + my_dt(hours=1)]
-	#
-	while dates[-1]<mainshock_datetime+my_dt(days=3):
-		dates+=[dates[-1]+my_dt(hours=4)]
-	while dates[-1]<mainshock_datetime+my_dt(days=5):
-		dates+=[dates[-1]+my_dt(hours=6)]
-	while dates[-1]<mainshock_datetime+my_dt(days=10):
-		dates+=[dates[-1]+my_dt(days=1)]
-	#
-	# any "response" events?
-	# all the biggest events happen within minutes of the mainshock, but we can trigger a special run for
-	# the 26-aug m=3.9 event:
-	dates += [dtm.datetime(2014, 10, 26, 12, 33, 17, tzinfo=pytz.timezone('UTC')) + my_dt(hours=1)]	# and set the ETAS for 1 hour after the event, so we don't
+	if dates == None:
+		dates = [mainshock_datetime - my_dt(days=1), mainshock_datetime + my_dt(hours=1)]
+		#
+		while dates[-1]<mainshock_datetime+my_dt(days=3):
+			dates+=[dates[-1]+my_dt(hours=4)]
+		while dates[-1]<mainshock_datetime+my_dt(days=5):
+			dates+=[dates[-1]+my_dt(hours=6)]
+		while dates[-1]<mainshock_datetime+my_dt(days=10):
+			dates+=[dates[-1]+my_dt(days=1)]
+		#
+		# any "response" events?
+		# all the biggest events happen within minutes of the mainshock, but we can trigger a special run for
+		# the 26-aug m=3.9 event:
+		dates += [dtm.datetime(2014, 10, 26, 12, 33, 17, tzinfo=pytz.timezone('UTC')) + my_dt(hours=1)]	# and set the ETAS for 1 hour after the event, so we don't
 																# get full saturation.
 	#
 	dates.sort()
 	#
-	prams_dict = {'doplot':False, 'kmldir':'napa_ag', 'catdir':'napa_ag', 'lats':lats, 'lons':lons, 'gridsize':gridsize, 'contres':10, 'mc':2.5, 'bigquakes':None, 'bigmag':5., 'eqtheta':None, 'eqeps':None, 'fitfactor':5.}
+	prams_dict = {'doplot':False, 'kmldir':'napa_ag', 'catdir':'napa_ag', 'lats':lats, 'lons':lons, 'gridsize':gridsize, 'contres':10, 'mc':mc, 'bigquakes':None, 'bigmag':5., 'eqtheta':None, 'eqeps':None, 'fitfactor':5.}
 	#
 	# now, get to work.
 	if n_cpus==None: n_cpus=mpp.cpu_count()
 	#my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu ?
 	#mypool = mpp.Pool(n_cpus)
-	pool_results = []
+	return_etases = []
 	#
 	for i, this_date in enumerate(dates):
 		prams_dict.update({'todt':this_date, 'fignum':i+2, 'fnameroot':'Napa-AG' + str(this_date), 'kmldir':'napa_ag', 'catdir':'napa_ag'})
@@ -401,31 +402,27 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, lats = [35.3667, 39.7400], l
 		# makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
 		#
 		#SPP it:
-		pool_results += [getter(makeETASFCfiles(**prams_dict))]
-		with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
-			cPickle.pickle(pool_results[-1].get(), f)
+		this_etas = makeETASFCfiles(**prams_dict)
+		#print "this_etas: ", this_etas
 		#
-	#mypool.close()
-	#mypool.join()
-	#
-	return_etases = []
-	#
-	# now, for each entry, pull the todt (?), make a map, save fig... serially.
-	for j, etas in enumerate(pool_results):
-		i=j+1
-		z=etas.get()
-		print "get() returns: ", z
-		return_etases+=[z]
-		plt.figure(i)
-		bcm = z.BASScastContourMap(maxNquakes=0, fignum=i)
-		x,y=z.cm(napa_eq['lon'], napa_eq['lat'])
-		plt.figure(i)
+#return_etases += [getter(this_etas)]
+		#
+		fnum = 2
+		#
+		plt.figure(fnum)
+		bcm = this_etas.BASScastContourMap(maxNquakes=0, fignum=fnum)
+		x,y=this_etas.cm(napa_eq['lon'], napa_eq['lat'])
+		plt.figure(fnum)
+		#
 		plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
-		plt.title('Napa ETAS: %s' % str(z.fcdate))
+		plt.title('Napa ETAS: %s\n\n' % str(this_etas.fcdate))
 		#
-		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(z.fcdate)))
-		#with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(z.fcdate)), 'w') as f:
-		#	cPickle.pickle(z, f)
+		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(this_etas.fcdate)))
+		try:
+			with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_etas.fcdate)), 'w') as f:
+				cPickle.pickle(this_etas, f)
+		except Exception as excep:
+			print "failed to pickle: ", str(excep)
 	#
 	return return_etases
 #
@@ -475,11 +472,11 @@ def EMC_ApplGeo_sequence():
 	#
 	return None
 #
-def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=5, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, fignum=1, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim'):
+def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=5, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='elmayor', catlen=5.0*365.0, doplot=False, fignum=1, lons=[-121.0, -114.0], lats=[30.0, 35.25], bigquakes=None, bigmag=5.0, eqtheta=None, eqeps=None, fitfactor=5.0, rtype='ssim', p_quakes=None, p_map=None):
 	#
 	if bigquakes==None:
 		bigquakes=[[mpd.date2num(dtm.datetime(2010, 4, 4, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))), 32.286200, -115.295300, 7.2]]
-	z= makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
+	z= makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, p_quakes=p_quakes, p_map=p_map)
 	#
 	z.BASScastContourMap(maxNquakes=10)
 	x,y=z.cm(-115.303, 32.128)
