@@ -1733,6 +1733,16 @@ class forecastsite(locbase):
 		#pool = mpp.Pool()
 		#dzs0 = []
 		#
+		# to accomplish MPPP:
+		# 1) create a Process() from each equake (either subclass it, create a Process() that contains the object,
+		#    or create a Process() that references that object's.localIntensity() function as its run-target. some,
+		#    if not all, of these approaches may have problems pickling the various bits to the sub-processes,
+		#    and it will be necessary to include Pipe()s to return the data.
+		# 2) reorganize so that we explicitly pass both locations and times (for equake and site) to a
+		# localIntensity() function. this can be done with a Pool() and apply_async().
+		#
+		# the Process() approach is probably fastest, so long as object pickling can be minimized.
+		#
 		return [equake.localIntensity(inloc=self.loc, intime=self.eventftime) for equake in equakes]
 	
 	def getz(self, equakes):
