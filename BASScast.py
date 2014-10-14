@@ -557,7 +557,7 @@ class BASScast(object):
 		#
 		return None
 	
-	def getContourSet(self, X_i=None, Y_i=None, Z_ij=None, contres=None):
+	def getContourSet(self, X_i=None, Y_i=None, Z_ij=None, contres=None, zorder=4, alpha=.3):
 		#
 		if X_i==None: X_i=self.X_i
 		if Y_i==None: Y_i=self.Y_i
@@ -584,7 +584,7 @@ class BASScast(object):
 		#
 		#cs = plt.contourf(X_i, Y_i, Z_ij, LevelsNumber, cm=plt.spectral()).collections
 		
-		cs = plt.contourf(X_i, Y_i, Z_ij, LevelsNumber, cm=plt.spectral(), alpha=.3)
+		cs = plt.contourf(X_i, Y_i, Z_ij, LevelsNumber, cm=plt.spectral(), alpha=alpha, zorder=zorder)
 		#cs = plt.contourf(X_i, Y_i, Z_ij, LevelsNumber, alpha=.3)
 	
 		return cs
