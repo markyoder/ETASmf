@@ -312,7 +312,7 @@ class BASScast(object):
 		#
 		# initialize a basemap:
 		cm_cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
-		self.cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cm_cntr[0], cm_lat_0=cm_cntr[1])
+		self.cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cm_cntr[0], lat_0=cm_cntr[1])
 		#
 		return None
 	
