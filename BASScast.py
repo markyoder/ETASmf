@@ -309,7 +309,11 @@ class BASScast(object):
 			#self.conts = self.getContourSet(X_i=self.X_i, Y_i=self.Y_i, Z_ij=self.Z2d.round(self.zresolution), contres=self.contfact*self.contres)
 			#self.conts = self.getContourSet(X_i=bcast[0], Y_i=bcast[1], Z_ij=bcast[2].round(4), contres=self.contfact*self.contres)
 			self.conts = self.getContourSet(X_i=bcast[0], Y_i=bcast[1], Z_ij=bcast[2], contres=self.contfact*self.contres)
-		
+		#
+		# initialize a basemap:
+		cm_cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
+		self.cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
+		#
 		return None
 	
 	def linres(self, p, y, x, w=None):
@@ -514,8 +518,11 @@ class BASScast(object):
 		plt.ion()
 		#
 		cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
-		cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
-		self.cm=cm
+		try:
+			cm = self.cm
+		except:
+			cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
+			self.cm=cm
 		cm.drawcoastlines(color='gray', zorder=1)
 		cm.drawcountries(color='gray', zorder=1)
 		cm.drawstates(color='gray', zorder=1)

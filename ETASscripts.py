@@ -424,7 +424,8 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.
 		except Exception as excep:
 			print "failed to pickle: ", str(excep)
 	#
-	return return_etases
+	#return return_etases
+	return this_etas, bcm
 #
 def EMC_ApplGeo_sequence():
 	# a sequence of EMC ETAS (potentially) for the Applied Geology chapter.
@@ -521,7 +522,7 @@ def makeTohokuETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, con
 		bigquakes=[]
 	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes[:], bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, cmfnum=cmfnum, fignum=fignum, contour_intervals=contour_intervals)
 #
-def makeNZ2013ETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='nz2013', catlen=5.0*365.0, doplot=False, lons=[173.94, 174.94], lats=[41.21, 42.24], bigquakes=None, bigmag=5.5, eqtheta=None, eqeps=None, fitfactor=5.0):
+def makeNZ2013ETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='nz2013', catlen=5.0*365.0, doplot=False, lons=[171.7, 173.7], lats=[42.58, 44.58], bigquakes=None, bigmag=5.5, eqtheta=None, eqeps=None, fitfactor=5.0):
 	#
 	if bigquakes==None:
 		bigquakes=[]
