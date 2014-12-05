@@ -340,7 +340,7 @@ class getter(object):
 		return self.obj
 	#
 #
-def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167], dates=None):
+def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.7400], lons = [-124.1636, -119.0167], dates=None, figsize=[8,8]):
 	# Bob Anderson didn't like the EMC sequence because it was not "California". so we'll do napa. let's pull back a bit to show
 	# the potentially related Clear Lake, North-o-Clear Lake, and Parkfieldish events as well (apparenly along the same
 	# not fault?)
@@ -377,6 +377,8 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.
 			dates+=[dates[-1]+my_dt(hours=6)]
 		while dates[-1]<mainshock_datetime+my_dt(days=10):
 			dates+=[dates[-1]+my_dt(days=1)]
+		while dates[-1]<dtm.datetime(2014,10,14, tzinfo=pytz.timezone('UTC')):
+			dates+=[dates[-1]+my_dt(days=3)]
 		#
 		# any "response" events?
 		# all the biggest events happen within minutes of the mainshock, but we can trigger a special run for
@@ -409,7 +411,8 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.
 		#
 		fnum = 2
 		#
-		plt.figure(fnum)
+		plt.figure(fnum, figsize=figsize)
+		plt.clf()
 		bcm = this_etas.BASScastContourMap(maxNquakes=0, fignum=fnum)
 		x,y=this_etas.cm(napa_eq['lon'], napa_eq['lat'])
 		plt.figure(fnum)
@@ -420,9 +423,10 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.
 		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(this_etas.fcdate)))
 		try:
 			with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_etas.fcdate)), 'w') as f:
-				cPickle.pickle(this_etas, f)
+				cPickle.dump(this_etas, f)
 		except Exception as excep:
 			print "failed to pickle: ", str(excep)
+		#
 	#
 	return return_etases
 #
