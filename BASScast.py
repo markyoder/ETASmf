@@ -77,7 +77,7 @@ class BASScast(object):
 		self.contres = contres
 		self.gridsize = gridsize
 		self.fcdate = fcdate
-		self.fcdatef = mpd.date2num(fcdate)*days2secs
+		if isinstance(fcdate, dtm.datetime): self.fcdatef = mpd.date2num(fcdate)*days2secs
 		self.fitfactor = fitfactor
 		#if rtype not in ('ssim', 'omorisat', 'satpl'): rtype='ssim'
 		self.rtype = rtype
