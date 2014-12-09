@@ -76,8 +76,22 @@ class BASScast(object):
 		self.mc = mc
 		self.contres = contres
 		self.gridsize = gridsize
+		#
+		# so simulator catalogs will probably produce dates that are out of datetime range. hijack this and pivot towards a more
+		# float-centric date management.
+			
 		self.fcdate = fcdate
-		if isinstance(fcdate, dtm.datetime): self.fcdatef = mpd.date2num(fcdate)*days2secs
+		if isinstance(fcdatef, dtm.datetime):
+			# and note that if we pass fcdate as a float, we need to convert from days to secs??? sort of. times
+			# get converted from days to seconds in the location() object initilizations. let's do that here as well;
+			# pass in a "days" and we'll convert here.
+			self.fcdatef = mpd.date2num(fcdate)*days2secs
+		else:
+			self.fcdatef = fcdate*days2secs		# and since days2secs ~ ~ 10**7.5, we can probably guess if seconds have been passed
+												# (if we want to). a more likely error would be to pass years, not days, and that's
+												# harder to trap.
+			#
+		#
 		self.fitfactor = fitfactor
 		#if rtype not in ('ssim', 'omorisat', 'satpl'): rtype='ssim'
 		self.rtype = rtype
