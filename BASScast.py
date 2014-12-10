@@ -85,11 +85,13 @@ class BASScast(object):
 			# and note that if we pass fcdate as a float, we need to convert from days to secs??? sort of. times
 			# get converted from days to seconds in the location() object initilizations. let's do that here as well;
 			# pass in a "days" and we'll convert here.
-			self.fcdatef = mpd.date2num(fcdate)*days2secs
+			fcdatef = mpd.date2num(fcdate)*days2secs
 		else:
-			self.fcdatef = fcdate*days2secs		# and since days2secs ~ ~ 10**7.5, we can probably guess if seconds have been passed
+			fcdatef = fcdate*days2secs
+												# and since days2secs ~ ~ 10**7.5, we can probably guess if seconds have been passed
 												# (if we want to). a more likely error would be to pass years, not days, and that's
 												# harder to trap.
+		self.fcdatef = fcdatef
 			#
 		#
 		self.fitfactor = fitfactor
@@ -115,6 +117,19 @@ class BASScast(object):
 			#
 			return None
 		#
+		# make sure, as best we can, that incat is a list type object (we might start seeing recarrays).
+		# recarrays would be better, but theyr'e not what whe have, and there are various operations that 
+		# will need to be recoded -- namely indexing and maybe some slicing.
+		#
+		if hasattr(incat, 'tolist'): incat=incat.tolist()
+		#
+		# trap some weird possible errors:
+		if len(incat[0])==1:
+			# this can happen in recarray conversions...
+			incat = [rw[0] for rw in incat]	# row got nested in a list or tuple.
+		
+		#
+		#print "incat type: ", type(incat)
 		self.catalog=incat	# dt, lat, lon, mag
 		#
 		# permit an empty catalog:
@@ -146,6 +161,7 @@ class BASScast(object):
 			#xy=map(operator.itemgetter(1,2), incat)	# so this will be lat, lon
 			#xy.sort()	# and it's now sorted by lat, then lon.
 			#incat.sort(key=operator.itemgetter(1))	# incat is now sorted by lat
+			#print "incat[0]: ", incat[0]
 			incat.sort(key = lambda x: (x[1], x[2]))
 			#
 			# should this be sorted by lat, lon?:
@@ -407,9 +423,6 @@ class BASScast(object):
 		#
 		#print quakes
 		fnow=mpd.date2num(dtm.datetime.now(pytz.timezone('UTC')))
-		#for q in quakes:
-		#	#print q.eventDtm, q.eventftime, q.mag, q.mc, q.timesince(734974.4474623842)
-		#	print q.eventDtm, q.eventftime, q.mag, q.mc, q.timesince(fnow)
 		#
 		#X, Y, Y = [], [], []
 		xyz=[]
@@ -1508,7 +1521,7 @@ class BASScast(object):
 #class locbase(object):
 class locbase(mpp.Process):
 	loc = [0,0]		# [lon, lat]
-	eventDtm = None
+	#eventDtm = None
 	eventftime = None # float version of time
 	mc=2.0
 	#
@@ -1526,6 +1539,7 @@ class locbase(mpp.Process):
 			intime=intime.eventftime
 		#
 		# otherwise, assume float ops will work.
+		#
 		tsince = intime - self.eventftime
 		#
 		return tsince
@@ -1611,11 +1625,14 @@ class locbase(mpp.Process):
 	def setEventTime(self, evtime):
 			#print type(evtime).__name__
 		#
-		if type(evtime).__name__ == 'datetime': # == type(dtm.datetime):
-			self.eventDtm = evtime
+		#print "setting EventTime: ", evtime, type(evtime), isinstance(evtime, float)
+		#if type(evtime).__name__ == 'datetime': # == type(dtm.datetime):
+		if isinstance(evtime, dtm.datetime):
+			#self.eventDtm = evtime
 			self.eventftime = mpd.date2num(evtime) * days2secs	# catalog must be in seconds for scaling to work.
-			#self.eventftime=self.datetimeToFloat(evtime)
-		if type(evtime) == type(1.0) or type(evtime) == type(1):
+			#
+		if isinstance(evtime, int) or isinstance(evtime, float):
+		#if type(evtime) == type(1.0) or type(evtime) == type(1):
 			self.eventftime = float(evtime)
 			#
 			#if self.eventftime < (mpd.date2num(dtm.datetime.now(pytz.timezone('UTC')))*100.0):
@@ -1623,16 +1640,16 @@ class locbase(mpp.Process):
 				# date is in days, not seconds
 				self.eventftime*=days2secs
 				#
-			self.eventDtm = mpd.num2date(self.eventftime/days2secs)	# assuming it is properly in seconds, as it should be.
-			# self.eventDtm = self.datetimeFromFloat(evtime)
-		if type(evtime) == type('abc'):
+			# this fails for large dates (in simulated catalogs) and we don't seem to ever use it...
+			#self.eventDtm = mpd.num2date(self.eventftime/days2secs)	# assuming it is properly in seconds, as it should be.
+			# 
+		#if type(evtime) == type('abc'):
+		if isinstance(evtime, str):
 			# convert the string, etc.
 			#self.eventDtm = self.datetimeFromString(strDtin=evtime)
 			self.eventftime = mpd.datestr2num(evtime)*days2secs
-			self.eventDtm = mpd.num2date(self.eventftime/days2secs)			
-			# mpd.num2date
-			#self.eventftime = self.datetimeToFloat(self.eventDtm)
-			#self.eventftime = mpd.date2num(self.eventDtm)
+			#self.eventDtm = mpd.num2date(self.eventftime/days2secs)			
+			#
 		return None
 
 	# utils we probably don't need any longer (use matplotlib.date.{various date conversions}
@@ -1789,7 +1806,7 @@ class earthquake(locbase):
 	# earthquake parameters (purely observable):
 	loc = [0.0,0.0]		# [lon, lat]
 	mag=None
-	eventDtm = None
+	#eventDtm = None
 	eventftime = None # float version of time
 	#mc=2.0	# obviously, this is not an earthquake propertie, but we will need it to calculate rates, etc.
 				# another approach might be to return self-rates, aka, the rate at which an earthquake produces
@@ -1841,24 +1858,6 @@ class earthquake(locbase):
 		#print "initializing: ", evtime
 		nothin=self.setEventTime(evtime)
 		#print "initializing2: ", self.eventftime, self.eventDtm
-		'''
-		if type(evtime).__name__ == 'datetime': # == type(dtm.datetime):
-			self.eventDtm = evtime
-			self.eventftime = nbd.date2num(evtime)
-			#self.eventftime=self.datetimeToFloat(evtime)
-		if type(evtime) == type(1.0):
-			self.eventftime = evtime
-			self.eventDtm = mpd.num2date(evtime)
-			# self.eventDtm = self.datetimeFromFloat(evtime)
-		if type(evtime) == type('abc'):
-			# convert the string, etc.
-			#self.eventDtm = self.datetimeFromString(strDtin=evtime)
-			self.eventftime = mpd.datestr2num(evtime)
-			self.eventDtm = mpd.num2date(self.eventftime)			
-			# mpd.num2date
-			#self.eventftime = self.datetimeToFloat(self.eventDtm)
-			#self.eventftime = mpd.date2num(self.eventDtm)
-		'''
 		#
 		# 13 oct 2014: comment
 		#self.dmp=1.0-math.log10(self.p-1.0)/self.b	# scaling exponent for initial rate 1/tau?
@@ -2189,9 +2188,10 @@ class earthquake(locbase):
 		try:
 			if self.p_map != None: this_p = self.p_map
 		except:
-			# there is no special "map p" defined. use regular Omor p.
+			# there is no special "map p" defined. use regular Omori p.
 			pass
 		#
+		#print "this_p: ", this_p
 		orate = 1.0/(tau * (t0 + t)**this_p)
 		#orate = 1.0/(tau * (t0 + t)**self.p)
 		#
