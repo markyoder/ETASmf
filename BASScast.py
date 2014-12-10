@@ -79,9 +79,9 @@ class BASScast(object):
 		#
 		# so simulator catalogs will probably produce dates that are out of datetime range. hijack this and pivot towards a more
 		# float-centric date management.
-			
+		#
 		self.fcdate = fcdate
-		if isinstance(fcdatef, dtm.datetime):
+		if isinstance(fcdate, dtm.datetime):
 			# and note that if we pass fcdate as a float, we need to convert from days to secs??? sort of. times
 			# get converted from days to seconds in the location() object initilizations. let's do that here as well;
 			# pass in a "days" and we'll convert here.
