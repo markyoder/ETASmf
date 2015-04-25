@@ -98,6 +98,12 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 #
 tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
+nepal_epi_lon = 84.698
+nepal_epi_lat = 28.175
+nepal_dlon = 5.
+nepal_dlat = 5.
+nepal_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+#
 def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	dt1=todt
@@ -488,6 +494,8 @@ def makeElMayorETAS(todt=dtm.datetime(2010,4,1, 0, 0, 0, 0, tzinfo=pytz.timezone
 	plt.figure(1)
 	plt.plot([x], [y], 'r*', ms=15, alpha=.7, zorder=11)
 	return z
+
+
 
 def makeSocalETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='socal', catlen=5.0*365.0, doplot=False, lons=[-122.5, -114.0], lats=[30.5, 37.25], bigquakes=None, bigmag=5.0, scalemag=4.0, eqtheta=None, eqeps=None, fitfactor=5.0,rtype='ssim'):
 	#
