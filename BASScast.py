@@ -124,7 +124,7 @@ class BASScast(object):
 		if hasattr(incat, 'tolist'): incat=incat.tolist()
 		#
 		# trap some weird possible errors:
-		if len(incat[0])==1:
+		if len(incat)>0 and len(incat[0])==1:
 			# this can happen in recarray conversions...
 			incat = [rw[0] for rw in incat]	# row got nested in a list or tuple.
 		

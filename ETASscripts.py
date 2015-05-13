@@ -102,7 +102,7 @@ nepal_epi_lon = 84.698
 nepal_epi_lat = 28.175
 nepal_dlon = 5.
 nepal_dlat = 5.
-nepal_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
 def make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs):
 	'''
@@ -132,6 +132,15 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 #
 def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, maxNquakes=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
+	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))
+	#
+	if kmldir==None and catdir==None:
+		kmldir, file_name = os.path.split(fnameroot)
+		catdir=kmldir 
+		
+	if not os.path.isdir(kmldir): os.makedirs(kmldir)
+	if not os.path.isdir(catdir): os.makedirs(catdir)
+	
 	dt1=todt
 	dt0=dt1-dtm.timedelta(days=catlen)
 	#bigquakes=[]
@@ -633,7 +642,7 @@ def makeChileETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, cont
 		bigquakes=[]
 	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
 #
-def makeTohokuETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=4.5, kmldir=kmldir, catdir=kmldir, fnameroot='tohoku', catlen=5.0*365.0, doplot=False, lons=[135., 146.], lats=[30., 41.5], bigquakes=None, bigmag=7.50, eqtheta=None, eqeps=None, fitfactor=5.0, cmfnum=0, fignum=1, contour_intervals=None):
+def makeTohokuETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=5, mc=4.5, kmldir=kmldir, catdir=kmldir, fnameroot='tohoku', catlen=5.0*365.0, doplot=False, lons=[135., 146.], lats=[30., 41.5], bigquakes=None, bigmag=7.50, eqtheta=None, eqeps=None, fitfactor=5.0, cmfnum=0, fignum=1, contour_intervals=None):
 	#
 	if bigquakes==None:
 		bigquakes=[]
