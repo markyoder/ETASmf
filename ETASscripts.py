@@ -102,10 +102,46 @@ nepal_epi_lon = 84.698
 nepal_epi_lat = 28.175
 nepal_dlon = 5.
 nepal_dlat = 5.
-nepal_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
-def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix=''):
+def make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs):
+	'''
+	# a wrapper for fast etas code development.
+	'''
+	if not isinstance(root_prams, dict): root_prams = {}
+	#
+	my_prams = root_prams.copy()
+	my_prams.update(kwargs)
+	#
+	return makeETASFCfiles(**my_prams)
+#
+def circle_poly(x=0., y=0., R=1.0, n_points=100):
+	'''
+	# make a circle-polygon witn n_points points. return array like [[x0,y1], [x1,y1], ...] in proper order. vectors can be constructedy by the consumer.
+	'''
+	#
+	d_theta = math.pi*2.0/float(n_points)
+	poly = []
+	#
+	for n in xrange(n_points):
+		theta = n*d_theta
+		poly += [[x+R*math.cos(theta), y+R*math.sin(theta)]]
+	#
+	return poly + [poly[0]]
+	
+#
+
+def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
+	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))
+	#
+	if kmldir==None and catdir==None:
+		kmldir, file_name = os.path.split(fnameroot)
+		catdir=kmldir 
+		
+	if not os.path.isdir(kmldir): os.makedirs(kmldir)
+	if not os.path.isdir(catdir): os.makedirs(catdir)
+	
 	dt1=todt
 	dt0=dt1-dtm.timedelta(days=catlen)
 	fnameroot=fnameroot+str(fnameroot_suffix)
@@ -194,7 +230,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	if doplot:
 		plt.figure(fignum)
 		plt.clf()
-		mfb.BASScastContourMap()
+		mfb.BASScastContourMap(maxNquakes=maxNquakes)
 		x,y=mfb.cm(bigquakes[0][2], bigquakes[0][1])
 		plt.plot([x], [y], '*', ms=15, alpha=.7)
 		plt.savefig(figname)
@@ -202,7 +238,86 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	#
 	return mfb
 #
-
+def make_capstone_2015_scenario(fnum=0, fnameroot = 'capstone/capstone', gridsize=.1, contres=3, mc=3.0, catlen=3.0*365.0, doplot=False, lons=[-119.5, -114.5], lats=[32.0, 35.5], bigquakes=[], bigmag=6.0, scalemag=5.0, addquakes=[], eqeps=None, eqtheta=None, rtype='ssim', maxNquakes=0):
+	'''
+	# 2015 capstone ETAS script:
+	# scenario: mainshock: m=7.8, lat=33.35, lon=-115.71, 5:32 am PDT, 11 May 2015.
+ 	# rupture_SE = [-115.71, 33.35] (epicenter), rupture_NW = [-118.51, 34.72] (endpoint linear approximation).
+ 	# get ETAS for 1 hour, 6 hours, 12 hours after mainshock. since there are no aftershocks in the scenario, this will nominally be a silly exercise,
+ 	# and we might otherwise pick a delta_t to normalize the aftershock halo to something reasonable.
+	'''
+	#
+	# check the output directory:
+	# if not os.path.isdir(output_dir):
+	#	os.makedirs(output_dir)
+	out_dir, out_froot = os.path.split(fnameroot)
+	if out_dir == '': out_dir='.'
+	if not os.path.isdir(out_dir): os.makedirs(out_dir)	
+	kmldir = out_dir
+	catdir = out_dir
+	fnameroot = out_froot
+	#
+	mainshock = {'lat': 33.35, 'lon':-115.71, 'depth':7.6, 'mag':7.8, 'event_time':dtm.datetime(2015, 5, 11, 5, 32, tzinfo=pytz.timezone('US/Pacific')), 'rupture_lat_start': 33.35, 'rupture_lon_start':-115.71, 'rupture_lat_end':34.72, 'rupture_lon_end':-118.51}
+	#
+	# do a sloppy job of estimating the mainshock rupture angle (be careful of the phase. i think our non-standard convention is CCW from E).
+	dy = mainshock['rupture_lat_end']-mainshock['rupture_lat_start']
+	dx = math.cos(math.pi*2.0*mainshock['rupture_lat_start']/360.)*(mainshock['rupture_lon_end']-mainshock['rupture_lon_start'])
+	L_r = math.sqrt(dx**2. + dy**2.)
+	theta_mainshock =  math.atan(dy/dx)*360./(2.0*math.pi)
+	#
+	epsilon_mainshock = 2.0
+	#theta_mainshock = 15.
+	#
+	t0 = mainshock['event_time']
+	time_points = [t0 - dtm.timedelta(days=1), t0 + dtm.timedelta(hours=1), t0+dtm.timedelta(days=1), t0+dtm.timedelta(days=2), t0 + dtm.timedelta(days=3), t0 + dtm.timedelta(days=4), t0 + dtm.timedelta(days=5)]
+	#
+	addquakes=[]		# add just the mainshock; no aftershocks in this scenario. eventually, this will be redone in a smarter way. for now, [dt, lat, lon, mag, depth]
+						#    ... and assume that we identified the rupture, and the aftershock hazard is centered on the rupture center, not the epicenter:
+	addquakes+=[[mainshock['event_time'], mainshock['lat'] + .5*dy, mainshock['lon'] + .6*dx, mainshock['mag'], mainshock['depth'], epsilon_mainshock, theta_mainshock]]
+	#
+	print "begin ETAS scenario."
+	print "mainshock: ", mainshock
+	print " theta: %f, epsilon: %f" % (theta_mainshock, epsilon_mainshock)
+	print "rupture: ", dx, dy
+	print "L_r: ", L_r * 111.
+	print "time_points: "
+	for tp in time_points: print tp
+	
+	#
+	fn=fnum
+	#
+	for dfn, fcdt in enumerate(time_points):
+		for j in xrange(2):
+			plt.figure(j)
+			plt.clf()
+		#
+		print "forecastdate: %s" % fcdt
+		#
+		thisfnameroot = fnameroot + '_%d' % dfn
+		bc1=None
+		bc1 = makeETASFCfiles(todt=fcdt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=thisfnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes[:], bigmag=scalemag, addquakes=addquakes, eqeps=eqeps, eqtheta=eqtheta, cmfnum=0, fignum=1, colorbar_fontcolor='w', rtype=rtype)
+		#
+		mfb=bc1.BASScastContourMap(fignum=1, maxNquakes=maxNquakes)
+		# and we'll want to draw the fault here as well...
+		#Fault endpoints: 36.82 -121.51, 40.25 -124.41
+		x1,y1=bc1.cm(mainshock['rupture_lon_start'], mainshock['rupture_lat_start'])
+		x2, y2=bc1.cm(mainshock['rupture_lon_end'], mainshock['rupture_lat_end'])
+		#
+		xms, yms=bc1.cm(mainshock['lon'], mainshock['lat'])
+		#xas1, yas1=bc1.cm(addquakes[1][2], addquakes[1][1])
+		#xas2, yas2=bc1.cm(as2lon, as2lat)
+		plt.plot([x1, x2], [y1, y2], 'm-s', lw=3, alpha=.7, label='Mainshock rupture (approximate)')
+		plt.plot([xms], [yms], 'k*', alpha=.8, zorder=7, ms=20)
+		plt.plot([xms], [yms], 'r*', alpha=.9, zorder=9, ms=18)
+		#
+		
+		plt.title('fcdate: %s, m>%.2f\n\n\n' % (fcdt, mc))
+		plt.savefig('%s/%s_etas_contours-%d.png' % (kmldir,fnameroot, dfn))
+		
+	
+	return bc1
+	
+	return None
 #
 def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-New')), gridsize=.1, contres=3, mc=3.0, kmldir=kmldir, catdir=kmldir, fnameroot='goldenguardian2013', catlen=3.0*365.0, doplot=False, lons=[-126.5, -118.5], lats=[34.0, 43.5], bigquakes=[], bigmag=6.0, scalemag=5.0, addquakes=[], eqeps=1.414, eqtheta=None, rtype='ssim'):
 	#
@@ -235,7 +350,7 @@ def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-N
 	dy=faultNorth[1]-faultSouth[1]
 	dx=(faultNorth[0]-faultSouth[0])*math.cos(2.0*math.pi*faultSouth[1]/360.)
 	#
-	faultTheta =math.atan(dy/dx)*360./6.282	# though this might be negative or should be the other angle (it should be obvious).
+	faultTheta = math.atan(dy/dx)*360./6.282	# though this might be negative or should be the other angle (it should be obvious).
 	print "fault theta: %f degrees" % faultTheta
 	#faultTheta = (90.+60.)
 	#
@@ -533,7 +648,7 @@ def makeChileETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, cont
 		bigquakes=[]
 	return makeETASFCfiles(todt=todt, gridsize=gridsize, contres=contres, mc=mc, kmldir=kmldir, catdir=catdir, fnameroot=fnameroot, catlen=catlen, doplot=doplot, lons=lons, lats=lats, bigquakes=bigquakes, bigmag=bigmag, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor)
 #
-def makeTohokuETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, mc=4.5, kmldir=kmldir, catdir=kmldir, fnameroot='tohoku', catlen=5.0*365.0, doplot=False, lons=[135., 146.], lats=[30., 41.5], bigquakes=None, bigmag=7.50, eqtheta=None, eqeps=None, fitfactor=5.0, cmfnum=0, fignum=1, contour_intervals=None):
+def makeTohokuETAS(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=5, mc=4.5, kmldir=kmldir, catdir=kmldir, fnameroot='tohoku', catlen=5.0*365.0, doplot=False, lons=[135., 146.], lats=[30., 41.5], bigquakes=None, bigmag=7.50, eqtheta=None, eqeps=None, fitfactor=5.0, cmfnum=0, fignum=1, contour_intervals=None):
 	#
 	if bigquakes==None:
 		bigquakes=[]
