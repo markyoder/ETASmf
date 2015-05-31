@@ -18,6 +18,13 @@ import cPickle
 kmldir='kml'
 catdir='kml'
 
+def japan_pacific_2015_m78():
+	E=esp.makeETASFCfiles(todt=esp.dtm.datetime.now(esp.pytz.timezone('UTC')), contres=8, mc=4.0, bigmag=6.5, lons=[140.5-5., 150.5+5.], lats=[27.83-5., 27.83+5.])
+	mymapy = E.BASScastContourMap(maxNquakes=3)
+	
+	return E
+	
+	
 def makeCaliFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, fcmc=2.0, kmldir='kml', catdir='kml', catlen=5.0*365.0):
 	norcalkml = kmldir + '/norcalconts.kml'
 	socalkml = kmldir + '/socalconts.kml'
