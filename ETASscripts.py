@@ -19,6 +19,13 @@ import cPickle
 kmldir='kml'
 catdir='kml'
 
+def japan_pacific_2015_m78():
+	E=esp.makeETASFCfiles(todt=esp.dtm.datetime.now(esp.pytz.timezone('UTC')), contres=8, mc=4.0, bigmag=6.5, lons=[140.5-5., 150.5+5.], lats=[27.83-5., 27.83+5.])
+	mymapy = E.BASScastContourMap(maxNquakes=3)
+	
+	return E
+	
+	
 def makeCaliFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, fcmc=2.0, kmldir='kml', catdir='kml', catlen=5.0*365.0):
 	norcalkml = kmldir + '/norcalconts.kml'
 	socalkml = kmldir + '/socalconts.kml'
@@ -97,7 +104,7 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 	#
 	#os.system('pfmovie$ mencoder mf://*.jpg -mf w=800:h=600:fps=5:type=jpg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o pfmovie.avi')
 #
-tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot_1300pst':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
 nepal_epi_lon = 84.698
 nepal_epi_lat = 28.175
@@ -170,7 +177,8 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 	return poly + [poly[0]]
 	
 #
-def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, maxNquakes=None):
+
+def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))
 	maxNquakes == int((1 or maxNquakes))
@@ -186,6 +194,11 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	
 	dt1=todt
 	dt0=dt1-dtm.timedelta(days=catlen)
+	fnameroot=fnameroot+str(fnameroot_suffix)
+	
+	print "fnameroot: ", fnameroot
+	#return None
+	
 	#bigquakes=[]
 	#print dt0, dt1
 	if bigquakes==None: bigquakes=[]
