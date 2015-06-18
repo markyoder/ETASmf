@@ -1,4 +1,5 @@
 import BASScast as bcp
+import ANSStools as atp
 
 import datetime as dtm
 import pytz
@@ -104,6 +105,45 @@ nepal_dlon = 5.
 nepal_dlat = 5.
 nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
+def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_factor=3.0, mc=2.5, mc_0=None, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, doplot=False):
+	'''
+	# a starter script to auto-select some parameters for an ETAS run. in practice, give this script a center location (probably a mainshock epicenter).
+	# the script will find the largest earthquake in that region and scale up an ETAS parameter set accordingly.
+		# d_lat_0, d_lon_0, dt_0 are the starting catalog parameters (largest earthquake in d_lat_0 x d_lon_0 x dt_0 cube).
+	'''
+	#
+	#if to_dt == None: to_dt = dtm.datetime.now(pytz.timezone('UTC'))
+	to_dt = (to_dt or dtm.datetime.now(pytz.timezone('UTC')))
+	mc_0  = (mc_0 or None)
+	#
+	if lon_center==None and lat_center==None:
+		# let's look for any large earthquake in the world. assume for this, mc
+		mc_0=6.0
+		lat_center = 0.
+		lon_center = 0.
+		d_lat_0 = 88.
+		d_lon_0 = -180.
+	#
+	# get a preliminary catalog:
+	cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), to_dt], fout=None, rec_array=True)
+	#
+	#biggest_earthquake = filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0]
+	mainshock = {cat_0.dtype.names[j]:x for j,x in enumerate(filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0])}
+	#
+	# now, get new map domain based on rupture length, etc.
+	L_r = .5*10.0**(.5*mainshock['mag'] - 1.76)
+	d_lat = L_r/lon2km
+	d_lat = L_r/(lon2km*math.cos(deg2rad*mainshock['lat']))
+	#
+	working_cat = atp.catfromANSS(lon=[mainshock['lon']-d_lon, mainshock['lon']+d_lon], lat=[mainshock['lat']-d_lat, mainshock['lat']+d_lat], minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
+	
+	#
+	print "biggest event(s): ", biggest_earthquake
+	
+	return biggest_earthquake
+	
+	
+#
 def make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs):
 	'''
 	# a wrapper for fast etas code development.
@@ -133,10 +173,13 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, maxNquakes=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))
+	maxNquakes == int((1 or maxNquakes))
 	#
 	if kmldir==None and catdir==None:
-		kmldir, file_name = os.path.split(fnameroot)
-		catdir=kmldir 
+		kmldir, fnameroot = os.path.split(fnameroot)
+		catdir=kmldir
+	if kmldir==None: kmldir=catdir
+	if catdir==None: catdir=kmldir
 		
 	if not os.path.isdir(kmldir): os.makedirs(kmldir)
 	if not os.path.isdir(catdir): os.makedirs(catdir)
@@ -158,6 +201,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	
 	cat=[]
 	cat = bcp.getMFETAScatFromANSS(lons=lons, lats=lats, dates=[dt0, dt1], mc=mc)
+	# note: this is likely now returning a recarray and the dates will be numpy.datetime64 types, not datetime.datetime.
 	#
 	# bandaid:
 	# this query pulls [float-date, lat, lon, mag, depth?].

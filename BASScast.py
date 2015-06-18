@@ -575,6 +575,7 @@ class BASScast(object):
 		#maxNquakes=250.0	# max num. equakes to plot (approximately)
 		Nquakes = float(len(self.quakes))
 		#
+		maxNquakes = (1 or maxNquakes)
 		if maxNquakes==0: 
 			mthresh=27.
 		else:
@@ -2566,6 +2567,18 @@ def fillHexString(hexstring='', strlen=6):
 		strs[1]='0'+strs[1]
 	return strs[0] + 'x' + strs[1]
 
+def date_type_fixer(date_in):
+	# a short script to fix date types. add cases as needed...
+	# return as datetime.datetime type.
+	#
+	if isinstance(date_in, numpy.datetime64):
+		return date_in.tolist()		# which, strangely, returns a datetime object, but keep an eye on this. maybe it's an unanticipated behavior.
+	elif isinstance(date_in, str):
+		# try the numpy.datetime64() constructor/conversions:
+		return numpy.datetime64(date_in).tolist()
+	else:
+		return date_in
+
 def getMFETAScatFromANSS(lons=[-121.0, -114.0], lats=[31.0, 37.0], dates=[None, None], mc=4.0):
 	if dates==None: dates=[None, None]
 	if dates[1]==None: dates[1]=dtm.datetime.now(pytz.timezone('UTC'))
@@ -2573,17 +2586,39 @@ def getMFETAScatFromANSS(lons=[-121.0, -114.0], lats=[31.0, 37.0], dates=[None, 
 	#
 	#print dates
 	clist1=atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=dates, Nmax=999999, fout=None)
-	catalog=[]
+	#catalog=[]
 	#X,Y,M = [], [], []
 	#
+	# nominally, we should modify the date-field in place and then return a clist1.tolist(), but note that this trims off extra columns, 
+	# so we'll be smarter in our next implementation, but this works for now.
+	# BUT, move this to return directly.
+	#catalog = [[date_type_fixer(rw[0]), rw[1], rw[2], rw[3], rw[4]] for rw in clist2]
+	#
+	'''
 	for rw in clist1:
+		#
+		# new catalogs might come back a recarray types, in which cast the datetime is a 'numpy.datetime64' object.
+		# we can either retrieve the catalog as a list (use recarray=False parameter), or handle it here. we can also take
+		# advantage of the recarray and call the columns by name.
+		#
+		# note also, we can do this in a single list comprehension... i think.
 		catalog+=[[mpd.date2num(rw[0]), rw[1], rw[2], rw[3], rw[4]]]
 		#catalog+=[[rw[0], rw[1], rw[2], rw[3], rw[4]]]
 		#catalog+=[[mpd.datestr2num(rw[0]), rw[1], rw[2], rw[3], rw[4]]]
 		#X+=[rw[2]]	# lon
 		#Y+=[rw[1]]	# lat
 		#M+=[rw[4]]
-	return catalog
+	'''
+	#return catalog
+	#
+	# so assuming we return the recarray, this could be something like
+	# return [[date_type_fixer(rw['event_date'])] + [rw[col] for col in ['lat', 'lon', 'mag', 'depth']] for rw in clist1]
+	# and we could even get into col handlers like:
+	# return [[f(rw[col]) for col,f in [['event_date', date_type_fixer], ['lat', lambda x:x], ['lon', lambda x:x], ['mag', lambda x:x], ['depth', lambda x:x]]]] for rw in clist1]
+	# or
+	# return [[f(rw[col]) for col,f in zip(['event_date', 'lat', 'lon', 'mag', 'depth'], [date_type_fixer]+[lambda x:x for j in xrange(4)])]]
+	# 
+	return [[mpd.date2num(date_type_fixer(rw[0])), rw[1], rw[2], rw[3], rw[4]] for rw in clist1]
 
 def checkPoly(inpoly, fignum=None):
 	# polygons are getting mangled by the "find closest neighbor" algarithm.
