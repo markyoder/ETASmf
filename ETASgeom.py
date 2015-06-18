@@ -9,6 +9,7 @@ import ANSStools as atp
 
 import numpy
 import pylab as plt
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
@@ -62,6 +63,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#biggest_earthquake = filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0]
 	print "fetch preliminary catalog; find *mainshock*"
 	mainshock = {cat_0.dtype.names[j]:x for j,x in enumerate(filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0])}
+	#print "biggest event(s): ", mainshock
 	#
 	# now, get new map domain based on rupture length, etc.
 	#L_r = .5*10.0**(.5*mainshock['mag'] - 1.76)
@@ -102,7 +104,25 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 		plt.plot([x], [y], 'o', ms=15.*ev['mag']/8.0, color=_colors[k%len(_colors)], label=lbl_str)
 	plt.legend(loc=0, numpoints=1)
 	#
-	print "biggest event(s): ", mainshock
+	# and for now, let's plot time-links (lines betwen sequential events):
+	for k, ev in enumerate(aftershock_cat[1:]):
+		X,Y = cat_map([aftershock_cat[k]['lon'], ev['lon']], [aftershock_cat[k]['lat'], ev['lat']])
+		plt.plot(X,Y, '.-', ms=8, color=_colors[k%len(_colors)], zorder=5)
+	#
+	f=plt.figure(1)
+	plt.clf()
+	ax3d = f.add_axes([.1, .1, .8, .8], projection='3d')
+	ax3d.plot(aftershock_cat['lon'], aftershock_cat['lat'], aftershock_cat['event_date_float'], 'o-')
+	#z = [mpd.date2num(dt.tolist()) for dt in aftershock_cat['event_date']]
+	#ax3d.plot(aftershock_cat['lat'][1:], aftershock_cat['lon'][1:], [x for x in (aftershock_cat['event_date_float'][1:]-mainshock['event_date_float'])], 'o-')
+	#ax3d.plot(aftershock_cat['lat'][1:], aftershock_cat['lon'][1:], [math.log10(x-z[0]) for x in z[1:]], 'o-')
+	ax3d.set_ylabel('latitude')
+	ax3d.set_xlabel('longitude')
+	ax3d.set_zlabel('time')
+	#print "times: ", [x-z[0] for x in z[1:]]
+	
+	return aftershock_cat
+	#return atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=False)
 	
 	#return biggest_earthquake
 #
