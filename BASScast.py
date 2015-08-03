@@ -56,11 +56,11 @@ class BASScast(object):
 							# n -> n0*10^(mc-rateMag.)
 	mapres='i'		# basemap map resolution.
 	#
-	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None):
+	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=None, eqeps=None, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None):
 		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype, p_quakes=p_quakes, p_map=p_map)
 		#
 	#
-	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=0.0, eqeps=1.0, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None, map_projection='cyl'):
+	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=None, eqeps=None, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None, map_projection='cyl'):
 		#
 		# input parameters notes:
 		# lats, lons: define the map lat, lon ranges. if None, we estimate them from the catalog. if provided, we explicitly set the map prams.
@@ -2211,7 +2211,7 @@ class earthquake(locbase):
 		# remember, these have to be normalized correctly so that integral(f(x)) -> N_omori or 1.0.
 		# ... and right now, the normalization is not right, but it is probably good enough for demonstrative purposes.
 		# self-similar omori-like:
-		rcrit = .5*lrupture	# this is the older "core" formulation (i think) log(thisL) = m/2 -2.76, and maybe a 1/2 
+		#rcrit = .5*lrupture	# this is the older "core" formulation (i think) log(thisL) = m/2 -2.76, and maybe a 1/2 
 									# as well.
 		rcrit = .5*10.0**(.5*self.mag - 1.76)	# this one is worth investigating, particularly for large earthquakes
 														# 
@@ -2224,6 +2224,20 @@ class earthquake(locbase):
 			
 			#radialDens = (q-1.0)*(r0ssim**(q-1.0))*(r0ssim + rprime)**(-q)
 			radialDens = (q-1.0)*(r0ssim**(q-1.0))*(r0ssim + rprime)**(-q)
+		if rtype=='ssim_exp':
+			# and omori * exp type density. use L_r or L_r/2 for the exponential cut-off.
+			# for now, split the difference and use .75*L_r
+			L_r = .75*10.0**(.5*self.mag - 1.76)
+			#
+			radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*(1.0-numpy.exp(-rprime/(L_r)))
+			# there should also be a normalization factor of some sort (for the 1-exp(r/Lr) bit at the end),
+			# but i'm not yet sure exactly how to make it work properly -- probably numerical integration,
+			# but that will be expensive, and for now we just want relative inensities.
+		if rtype=='ssim_inv_gamma':
+			L_r = .75*10.0**(.5*self.mag - 1.76)
+			radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*numpy.exp(-L_r/rprime)
+			# and again, there's a normalization constant to be had here. this one is fairly straight forward
+			# (i think), but still costly and we mostly want relative rates.
 		#
 		if rtype=='ssimbump':
 			# a hypothetical distribution accounting for Tahir2012, ssim with reduced probability
