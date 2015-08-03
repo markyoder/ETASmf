@@ -146,6 +146,12 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	
 	#
 	print "biggest event(s): ", biggest_earthquake
+	#
+	# now, do some ETAS:
+	# skip working_cat above, but parse lon, lat, etc. parameters similarly. pass those (and other) params to make_etas_fcfiles()
+	root_prams = {}
+	my_kwargs = {}
+	etas = make_etas_fcfiles(root_prams=root_prams, **my_kwargs)
 	
 	return biggest_earthquake
 	

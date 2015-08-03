@@ -2227,14 +2227,14 @@ class earthquake(locbase):
 		if rtype=='ssim_exp':
 			# and omori * exp type density. use L_r or L_r/2 for the exponential cut-off.
 			# for now, split the difference and use .75*L_r
-			L_r = .75*10.0**(.5*self.mag - 1.76)
+			L_r = 1.0*10.0**(.5*self.mag - 1.76)
 			#
 			radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*(1.0-numpy.exp(-rprime/(L_r)))
 			# there should also be a normalization factor of some sort (for the 1-exp(r/Lr) bit at the end),
 			# but i'm not yet sure exactly how to make it work properly -- probably numerical integration,
 			# but that will be expensive, and for now we just want relative inensities.
 		if rtype=='ssim_inv_gamma':
-			L_r = .75*10.0**(.5*self.mag - 1.76)
+			L_r = 1.0*10.0**(.5*self.mag - 1.76)
 			radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*numpy.exp(-L_r/rprime)
 			# and again, there's a normalization constant to be had here. this one is fairly straight forward
 			# (i think), but still costly and we mostly want relative rates.
