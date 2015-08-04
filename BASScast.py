@@ -107,7 +107,8 @@ class BASScast(object):
 		self.contour_intervals=contour_intervals
 		#
 		# read a catalog
-		if type(incat)==type('astring'):
+		#if type(incat)==type('astring'):
+		if isinstance(incat, str):
 			# it's a filename. assume it's formatted for a catalog object...
 			# ... and we're not sure what to do with this just yet. for now, require a list
 			# [ [dtm, lat, lon, mag, (depth?)], [], ... ] (consistent with ypp.eqcatalog() format.
