@@ -181,9 +181,7 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 		poly += [[x+R*math.cos(theta), y+R*math.sin(theta)]]
 	#
 	return poly + [poly[0]]
-	
 #
-
 def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))

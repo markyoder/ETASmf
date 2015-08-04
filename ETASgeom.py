@@ -31,6 +31,10 @@ import multiprocessing as mpp
 lon2km = 111.1
 deg2rad = 2.*math.pi/360.
 
+# tohoku:
+# a=egp.etas_auto(to_dt=None, lat_center=38.32, lon_center=142.37, Lr_map_factor=2., mc=5.0, catlen=5.*365., dt_0=None)
+#tohoku_params = {}
+
 
 def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_map_factor=5.0, mc=2.5, mc_0=None, dm_cat=2.0, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, d_lambda=1.76, doplot=False):
 	'''
@@ -41,6 +45,9 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	# the script will find the largest earthquake in that region and scale up an ETAS parameter set accordingly.
 		# d_lat_0, d_lon_0, dt_0 are the starting catalog parameters (largest earthquake in d_lat_0 x d_lon_0 x dt_0 cube).
 	'''
+	#
+	# catch some default value exceptions:
+	if dt_0==None: dt_0=10
 	#
 	_colors =  mpl.rcParams['axes.color_cycle']
 	Lr_as_factor=.5
@@ -59,6 +66,14 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#
 	# get a preliminary catalog:
 	cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), to_dt], fout=None, rec_array=True)
+	# diagnostic: output catalog length
+	print "catalog length: %d" % len(cat_0)
+	#
+	# if there are no events, we probably are looking for a long range ETAS, so let's look for ALL events in the full catlen interval:
+	if len(cat_0)==1:
+		print "empty catalog. search over the whole catalog length..."
+		# note: when we return as a recarray, an empty array has length 1 (pull up an empty array and figure out the details some time).
+		cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	#
 	#biggest_earthquake = filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0]
 	print "fetch preliminary catalog; find *mainshock*"
@@ -101,7 +116,13 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 		x,y = cat_map(ev['lon'], ev['lat'])
 		ev_dtm = ev['event_date'].tolist()
 		lbl_str = 'm=%.2f, %d-%d-%d %d:%d:%d' % (ev['mag'], ev_dtm.year, ev_dtm.month, ev_dtm.day, ev_dtm.hour,ev_dtm.minute,ev_dtm.second)
-		plt.plot([x], [y], 'o', ms=15.*ev['mag']/8.0, color=_colors[k%len(_colors)], label=lbl_str)
+		#
+		# plot pre-mainshock events as squares, post-mainshock events as circles:
+		if ev['event_date']<mainshock['event_date']: marker_str = 's'
+		if ev['event_date']==mainshock['event_date']: marker_str = '*'
+		if ev['event_date']>mainshock['event_date']: marker_str = 'o'
+		#
+		plt.plot([x], [y], marker_str, ms=15.*ev['mag']/8.0, color=_colors[k%len(_colors)], label=lbl_str)
 	plt.legend(loc=0, numpoints=1)
 	#
 	# and for now, let's plot time-links (lines betwen sequential events):
@@ -120,6 +141,26 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	ax3d.set_xlabel('longitude')
 	ax3d.set_zlabel('time')
 	#print "times: ", [x-z[0] for x in z[1:]]
+	#
+	f=plt.figure(2)
+	plt.clf()
+	ax3d2 = f.add_axes([.1, .1, .8, .8], projection='3d')
+	ax3d2.plot(aftershock_cat['lon'][1:], aftershock_cat['lat'][1:], numpy.log10(aftershock_cat['event_date_float'][1:]-aftershock_cat['event_date_float'][0]), 'o-')
+	
+	ax3d2.set_ylabel('latitude')
+	ax3d2.set_xlabel('longitude')
+	ax3d2.set_zlabel('$log(\\Delta t)$')
+		
+	print "log(dt): ", numpy.log10(aftershock_cat['event_date_float'][1:]-aftershock_cat['event_date_float'][0])
+	
+	f=plt.figure(3)
+	plt.clf()
+	ax3d3 = f.add_axes([.1, .1, .8, .8], projection='3d')
+	ax3d3.plot(aftershock_cat['lon'][0:], aftershock_cat['lat'][0:], aftershock_cat['depth'][0:], 'o-')
+	ax3d3.set_ylabel('latitude')
+	ax3d3.set_xlabel('longitude')
+	ax3d3.set_zlabel('depth $z$')
+
 	
 	return aftershock_cat
 	#return atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=False)

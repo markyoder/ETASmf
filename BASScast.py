@@ -176,11 +176,18 @@ class BASScast(object):
 			# modularize the function -- pass all values directly, rather than pull them from "self"). 1) classes
 			# seem to not pickel into mpp properly, 2) if possible, we want to avoid having to pickle the whole
 			# class anyway.
+			#... really, this is one (of several) reasons that this whole thing needs to be rewritten. use simpler objects (maybe retain earthquake, etc.
+			# objects, but instantiate them within the pickled process (for parallel operation). aka, we have a list of earthquakes, which we
+			# parse up and send off to processes. in each thread, for each event, we instantiate an Earthquake() object, do our stuff, out put to a list
+			# type object which we picke back.
 			#
 			# we'll want to introduce the elliptical convolution with fault map or local seismicity. for now, fudge it.
 			# each rw: [dtm, lat, lon, mag, ...]
 			# note: loc[] for earthquake is [lon, lat]; we receive incat as lat,lon
-			self.quakes+=[earthquake(mag=rw[3], loc=[rw[2], rw[1]], evtime=rw[0], mc=mc, rtype=self.rtype, p=p_quakes, p_map=p_map)]
+			ev_dt = rw[0]
+			if isinstance(rw[0], dtm.datetime): ev_dt = mpd.date2num(rw[0])
+			if isinstance(rw[0], str): ev_dt = mpd.datestr2num(rw[0])
+			self.quakes+=[earthquake(mag=rw[3], loc=[rw[2], rw[1]], evtime=ev_dt, mc=mc, rtype=self.rtype, p=p_quakes, p_map=p_map)]
 			#
 			thiseq=self.quakes[-1]
 			#
@@ -534,21 +541,29 @@ class BASScast(object):
 		return None
 	'''
 		
-	def BASScastContourMap(self, X_i=None, Y_i=None, Z2d=None, fignum=1, maxNquakes=250.0, alpha=.75):
+	def BASScastContourMap(self, X_i=None, Y_i=None, Z2d=None, fignum=1, maxNquakes=250.0, alpha=.75, lats=None, lons=None):
 		#
 		if X_i==None: X_i = self.X_i
 		if Y_i==None: Y_i = self.Y_i
 		if Z2d==None: Z2d = self.Z2d
 		#
+		if lats==None: lats=self.latrange
+		if lons==None: lons=self.lonrange
+		#
 		plt.figure(fignum)
 		plt.clf()
 		plt.ion()
 		#
-		cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
+		#cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
+		#cntr = [lons[0] + .5*(lons[1]-lons[0]), lats[0] + .5*(lats[1]-lats[0])]
+		cntr = [.5*(lons[1]+lons[0]), .5*(lats[1]+lats[0])]		# duh...
 		try:
-			cm = self.cm
+			if lats!=self.latrange or lons!=self.lonrange:
+				cm = Basemap(llcrnrlon=lons[0], llcrnrlat=lats[0], urcrnrlon=lons[1], urcrnrlat=lats[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
+			else:
+				cm = self.cm
 		except:
-			cm = Basemap(llcrnrlon=self.lonrange[0], llcrnrlat=self.latrange[0], urcrnrlon=self.lonrange[1], urcrnrlat=self.latrange[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
+			cm = Basemap(llcrnrlon=lons[0], llcrnrlat=lats[0], urcrnrlon=lons[1], urcrnrlat=lats[1], resolution=self.mapres, projection=self.map_projection, lon_0=cntr[0], lat_0=cntr[1])
 			self.cm=cm
 		cm.drawcoastlines(color='gray', zorder=1)
 		cm.drawcountries(color='gray', zorder=1)
@@ -557,11 +572,10 @@ class BASScast(object):
 		cm.fillcontinents(color='beige', zorder=0)
 		# drawlsmask(land_color='0.8', ocean_color='w', lsmask=None, lsmask_lons=None, lsmask_lats=None, lakes=True, resolution='l', grid=5, **kwargs)
 		#cm.drawlsmask(land_color='0.8', ocean_color='c', lsmask=None, lsmask_lons=None, lsmask_lats=None, lakes=True, resolution=self.mapres, grid=5)
-
-
-		print "lat, lon ranges: ", self.latrange, self.lonrange
-		cm.drawmeridians(range(int(self.lonrange[0]), int(self.lonrange[1])), color='k', labels=[0,0,1,1])
-		cm.drawparallels(range(int(self.latrange[0]), int(self.latrange[1])), color='k', labels=[1, 1, 0, 0])
+		#
+		print "lat, lon ranges: ", lats, lons
+		cm.drawmeridians(range(int(lons[0]), int(lons[1])), color='k', labels=[0,0,1,1])
+		cm.drawparallels(range(int(lats[0]), int(lats[1])), color='k', labels=[1, 1, 0, 0])
 		#
 		# get X,Y for contours:
 		#
