@@ -56,8 +56,8 @@ class BASScast(object):
 							# n -> n0*10^(mc-rateMag.)
 	mapres='i'		# basemap map resolution.
 	#
-	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=None, eqeps=None, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None):
-		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype, p_quakes=p_quakes, p_map=p_map)
+	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=None, eqeps=None, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None, map_projection='cyl'):
+		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype, p_quakes=p_quakes, p_map=p_map, map_projection=map_projection)
 		#
 	#
 	def initialize(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=None, eqeps=None, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None, map_projection='cyl'):
@@ -553,7 +553,7 @@ class BASScast(object):
 		#
 		plt.figure(fignum)
 		plt.clf()
-		plt.ion()
+		#plt.ion()
 		#
 		#cntr = [self.lonrange[0] + .5*(self.lonrange[1]-self.lonrange[0]), self.latrange[0] + .5*(self.latrange[1]-self.latrange[0])]
 		#cntr = [lons[0] + .5*(lons[1]-lons[0]), lats[0] + .5*(lats[1]-lats[0])]

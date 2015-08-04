@@ -30,6 +30,59 @@ nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':
 lats_nepal=[26., 30.]
 lons_nepal=[83., 89.]
 
+def my_now():
+	return dtm.datetime.now(pytz.timezone('UTC'))
+
+def nepal_etas_set(big_mag=6.28, cat_len = 5.*365.):
+	# make a bunch of ETAS, basically for each earthquake in the Gorkha series. todt = {just before the next earthquake}, start with just-before the mainshock.
+	# let's not make a full set of files; just .png... or anyway, don't use the canned function. script .png and maybe .kml here. also script decoration (aka, 
+	# plotting earthquakes, etc.).
+	# so, call ETAS, returns a BASScast object. then, call nepal_bm_decorator(basscast_object.cm), then save...
+	#
+	#kmldir = 'ACES_2015/kml_prime'
+	kmldir = 'ACES_2015/png_etas'
+	if not os.path.isdir(kmldir): os.makedirs(kmldir)
+	#
+	mc = nepal_ETAS_prams['mc']
+	lons = nepal_ETAS_prams['lons']
+	lats = nepal_ETAS_prams['lats']
+	#
+	lats_map = lats_nepal
+	lons_map = lons_nepal
+	#
+	dt1 = my_now()
+	dt0 = dt1-dtm.timedelta(days=cat_len)
+	#
+	cat_bass =  bcp.getMFETAScatFromANSS(lons=lons, lats=lats, dates=[dt0, my_now()], mc=mc)
+	big_quakes = filter(lambda rw: rw[3]>big_mag, cat_bass)
+	#
+	# find mainshock:
+	mainshock_mag = cat_bass[0][3]
+	for j,rw in enumerate(cat_bass):
+		if rw[3]>mainshock_mag:
+			mainshock=rw
+			mainshock_mag=rw[3]
+			mainshock_j = j
+		#
+	#
+	print "mainshock info: (%d/%d:%f) %s" % (mainshock_j, len(cat_bass), mainshock_mag, str(mainshock))
+	#
+	for j,rw in enumerate(cat_bass[mainshock_j:]):
+		B = bcp.BASScast(incat = cat_bass[:j+mainshock_j], fcdate=numpy_date_to_datetime(rw[0]), gridsize=.1, contres=10,mc=mc,eqtheta=None, eqeps=None, fitfactor=5.0, lats=lats, lons=lons, doBASScast=True, rtype='ssim_inv_gamma', map_projection='cyl')
+		q = B.BASScastContourMap(maxNquakes=0., lats=lats_map, lons=lons_map)
+		#
+		# now decorate:
+		# (i think this returns the cm object it injests, so we might be careful to not make a weird memory leak.
+		#B.cm=nepal_bm_decorator(cm=B.cm, prams = nepal_ETAS_prams, fnum=0, map_res='i', big_mag=6.28, hours_after=None, **kwargs)
+		print "hours after: %f - %f = %f :: %f" % (rw[0], mainshock[0],rw[0]-mainshock[0], (rw[0]-mainshock[0])*24.)
+		B.cm=nepal_bm_decorator(cm=B.cm, todt=None, hours_after=(rw[0]-mainshock[0])*24.)
+		#
+		plt.title('Nepal ETAS: %s\n\n' % str(numpy_date_to_datetime(rw[0])))
+		fig_name = os.path.join(kmldir, 'nepal_inv_gamma_etas_set_%s.png' % str('000000%d' % j)[-4:])
+		plt.savefig(fig_name)
+		
+	
+	return big_quakes
 
 def nepal_etas():
 	# first, use existing machinery to make a BASScast object complete to today. we can then use this object to make custom forecsts... or maybe we'll just run a
@@ -71,9 +124,11 @@ def nepal_etas():
 	return z
 
 def nepal_basemap(prams = nepal_ETAS_prams, fnum=0, map_res='i', **kwargs):
+	# hours_after: upper time limit for aftershocks to plot.
 	prams.update(kwargs)
 	#
 	lons_nepal = [83., 87.]
+	lats_nepal = [26., 30.]
 	
 	todt=prams.get('todt', None)
 	catlen=prams.get('catlen', 5.*365.)
@@ -99,6 +154,23 @@ def nepal_basemap(prams = nepal_ETAS_prams, fnum=0, map_res='i', **kwargs):
 	cm.drawmeridians(range(int(lons[0]), int(lons[1])), color='k', labels=[0,0,1,1])
 	cm.drawparallels(range(int(lats[0]), int(lats[1])), color='k', labels=[1, 1, 0, 0])
 	#
+	return cm
+#
+def nepal_bm_decorator(cm=None, prams = nepal_ETAS_prams, fnum=0, map_res='i', big_mag=6.28, hours_after=None, **kwargs):
+	cm = (cm or nepal_basemap())
+	prams.update(kwargs)
+	#
+	lons_nepal = [83., 87.]
+	
+	todt=prams.get('todt', None)
+	catlen=prams.get('catlen', 5.*365.)
+	lons=prams['lons']
+	lats=prams['lats']
+	mc = prams['mc']
+	#
+	if todt==None: todt = dtm.datetime.now(pytz.timezone('UTC'))
+	dt0 = todt - dtm.timedelta(days=catlen)
+	
 	# get a catalog:
 	cat_0 = atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=[dt0, todt], fout=None, rec_array=True)
 	#print cat_0[0:5]
@@ -111,17 +183,41 @@ def nepal_basemap(prams = nepal_ETAS_prams, fnum=0, map_res='i', **kwargs):
 		if rw[3]==max_mag:
 			mainshock = rw
 			break
+	# make a datetime type for mainshock:
+	mainshock_dtm = numpy_date_to_datetime(mainshock[0])
+	if hours_after!=None:
+		time_after = dtm.timedelta(hours=hours_after)
+	else:
+		time_after = my_now()-mainshock_dtm
+	#
+	cat_big = filter(lambda x: (x[3]>big_mag and x[0]>mainshock[0] and x!=mainshock), cat_0)		# just big aftershocks...
 	#
 	plt.plot([mainshock[2]], [mainshock[1]], 'r*', ms=17, zorder=6)
 	plt.plot([mainshock[2]], [mainshock[1]], 'k*', ms=20, zorder=5)
 	plt.plot(*zip(*[[rw[1], rw[2]] for rw in quakes_map if rw[0]<mainshock[0]]), marker='o', ms=5, ls='', color='r', zorder=5, label='befores')
-	time_after = dtm.timedelta(hours=36)
-	plt.plot(*zip(*[[rw[1], rw[2]] for rw in quakes_map if (rw[0]>mainshock[0] and rw[0]<mainshock[0].tolist()+time_after)]), marker='o', ms=5, ls='', color='b', zorder=5, label='afters')
+	#
+	plt.plot(*zip(*[[rw[1], rw[2]] for rw in quakes_map if (rw[0]>mainshock[0] and rw[0]<mainshock[0].tolist()+time_after)]), marker='o', ls='', ms=5, color='b', zorder=5, label='afters')
+	#
+	# ... and the big ones:
+	for rw in cat_big:
+		print rw
+		dt=rw[0].tolist()
+		#
+		plt.plot([rw[2]], [rw[1]], 'o', ms=15.*(rw[3]/8.), label='m=%.2f, %d/%d' % (rw[3], dt.month, dt.day), zorder=6, alpha=.6)
+	
 	#
 	plt.legend(loc=0, numpoints=1)
 	
-	return quakes_map
-
+	return cm
+#
+def numpy_date_to_datetime(numpy_date, tz='UTC'):
+	#
+	if isinstance(numpy_date, dtm.datetime): return numpy.date
+	#
+	if isinstance(numpy_date,float): return mpd.num2date(numpy_date)
+	#
+	return dtm.datetime(*list(numpy_date.tolist().timetuple())[:6] + [numpy_date.tolist().microsecond], tzinfo=pytz.timezone(tz))
+	
 def nepal_intervals_figure(root_prams=nepal_ETAS_prams, **kwargs):
 	#
 	my_prams = root_prams.copy()
