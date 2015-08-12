@@ -48,13 +48,13 @@ def mod_kwargs(prams_dict, **kwargs):
 def chengdus():
 	A=chengdu_etas(prams=sischuan_prams, catlen=5.*365.)
 	plt.figure(1)
-	plt.title('Chengdu ETAS: %s\n' % str(prams['todt']))
-	A.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr.png'))
+	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
+	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr.png'))
 	
 	A=chengdu_etas(prams=sischuan_prams, catlen=10.*365.)
 	plt.figure(1)
-	plt.title('Chengdu ETAS: %s\n' % str(prams['todt']))
-	A.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr.png'))
+	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
+	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr.png'))
 	
 
 def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
@@ -74,11 +74,14 @@ def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 	A.cm.plot([x], [y], 'r*', ms=18, zorder=7, alpha=.7)
 	#
 	for rw in A.catalog:
-		if rw[3]<7.0: continue
+		if rw[3]<6.5: continue
 		if rw[0]<mpd.date2num(dtm.datetime(2007,1,1, tzinfo=pytz.timezone('UTC'))): continue
 		#
 		x,y = A.cm(rw[2], rw[1])
-		plt.plot([x], [y], 'o', ms=12.*rw[3]/8., zorder=5)
+		dt = mpd.num2date(rw[0])
+		plt.plot([x], [y], 'o', ms=12.*rw[3]/8., zorder=5, label='m=%.2f, %d/%d/%d' % (rw[3], dt.year, dt.month, dt.day))
+	#
+	plt.legend(loc=0, numpoints=1)
 	#
 	return A
 
