@@ -49,12 +49,14 @@ def chengdus():
 	A=chengdu_etas(prams=sischuan_prams, catlen=5.*365.)
 	plt.figure(1)
 	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
-	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr.png'))
+	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr_b.png'))
 	
 	A=chengdu_etas(prams=sischuan_prams, catlen=10.*365.)
 	plt.figure(1)
 	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
-	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr.png'))
+	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr_b.png'))
+	
+	return A
 	
 
 def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
@@ -62,8 +64,11 @@ def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 	#A=esp.makeETASFCfiles(**mod_kwargs(sichuan_prams, catlen=3650.))
 	#
 	prams = mod_kwargs(prams,**kwargs)
+	#prams.update({'lats':[31.021-dlat, 31.021+dlat], 'lons':[103.367-dlon, 103.367+dlon]})
+	print "prams: ", prams['todt']
 	#
 	A=esp.make_etas_fcfiles(prams, lats=[31.021-dlat, 31.021+dlat], lons=[103.367-dlon, 103.367+dlon])
+	#A=esp.makeETASFCfiles(todt=None, gridsize=.1, contres=3, mc=4.0, kmldir='kml', catdir='kml', fnameroot='chengdu_etas', catlen=prams['catlen'], doplot=False, lons=prams['lons'], lats=prams['lats'], bigquakes=[], bigmag=6.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None)
 	#
 	chengdu_lon = 104.+4./60.
 	chengdu_lat = 30. + 2./3.
@@ -79,7 +84,7 @@ def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 		#
 		x,y = A.cm(rw[2], rw[1])
 		dt = mpd.num2date(rw[0])
-		plt.plot([x], [y], 'o', ms=12.*rw[3]/8., zorder=5, label='m=%.2f, %d/%d/%d' % (rw[3], dt.year, dt.month, dt.day))
+		plt.plot([x], [y], 'o', ms=9.*rw[3]/8., zorder=5, label='m=%.2f, %d/%d/%d' % (rw[3], dt.year, dt.month, dt.day))
 	#
 	plt.legend(loc=0, numpoints=1)
 	#
