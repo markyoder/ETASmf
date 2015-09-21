@@ -5,12 +5,15 @@ import pylab as plt
 import os
 import datetime as dtm
 import pytz
+import numpy
+
 import BASScast as bcp
 import ANSStools as atp
 
 import matplotlib.dates as mpd
 import matplotlib
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.dates as mpd
 import matplotlib.mpl as mpl
 #
@@ -33,14 +36,14 @@ lons_nepal=[83., 89.]
 def my_now():
 	return dtm.datetime.now(pytz.timezone('UTC'))
 
-def nepal_etas_set(big_mag=6.28, cat_len = 5.*365.):
+def nepal_etas_set(big_mag=6.28, cat_len = 5.*365., kmldir = 'ACES_2015/png_etas', rtype='ssim_inv_gamma'):
 	# make a bunch of ETAS, basically for each earthquake in the Gorkha series. todt = {just before the next earthquake}, start with just-before the mainshock.
 	# let's not make a full set of files; just .png... or anyway, don't use the canned function. script .png and maybe .kml here. also script decoration (aka, 
 	# plotting earthquakes, etc.).
 	# so, call ETAS, returns a BASScast object. then, call nepal_bm_decorator(basscast_object.cm), then save...
 	#
 	#kmldir = 'ACES_2015/kml_prime'
-	kmldir = 'ACES_2015/png_etas'
+	#kmldir = 'ACES_2015/png_etas'
 	if not os.path.isdir(kmldir): os.makedirs(kmldir)
 	#
 	mc = nepal_ETAS_prams['mc']
@@ -68,8 +71,10 @@ def nepal_etas_set(big_mag=6.28, cat_len = 5.*365.):
 	print "mainshock info: (%d/%d:%f) %s" % (mainshock_j, len(cat_bass), mainshock_mag, str(mainshock))
 	#
 	for j,rw in enumerate(cat_bass[mainshock_j:]):
-		B = bcp.BASScast(incat = cat_bass[:j+mainshock_j], fcdate=numpy_date_to_datetime(rw[0]), gridsize=.1, contres=10,mc=mc,eqtheta=None, eqeps=None, fitfactor=5.0, lats=lats, lons=lons, doBASScast=True, rtype='ssim_inv_gamma', map_projection='cyl')
-		q = B.BASScastContourMap(maxNquakes=0., lats=lats_map, lons=lons_map)
+		B = bcp.BASScast(incat = cat_bass[:j+mainshock_j], fcdate=numpy_date_to_datetime(rw[0]), gridsize=.1, contres=10,mc=mc,eqtheta=None, eqeps=None, fitfactor=5.0, lats=lats, lons=lons, doBASScast=True, rtype=rtype, map_projection='cyl')
+		plt.figure(1)
+		plt.close()		
+		q = B.BASScastContourMap(maxNquakes=0., lats=lats_map, lons=lons_map, fignum=1, fig_size=(12,8))
 		#
 		# now decorate:
 		# (i think this returns the cm object it injests, so we might be careful to not make a weird memory leak.
@@ -78,7 +83,7 @@ def nepal_etas_set(big_mag=6.28, cat_len = 5.*365.):
 		B.cm=nepal_bm_decorator(cm=B.cm, todt=None, hours_after=(rw[0]-mainshock[0])*24.)
 		#
 		plt.title('Nepal ETAS: %s\n\n' % str(numpy_date_to_datetime(rw[0])))
-		fig_name = os.path.join(kmldir, 'nepal_inv_gamma_etas_set_%s.png' % str('000000%d' % j)[-4:])
+		fig_name = os.path.join(kmldir, 'nepal_%s_etas_set_%s.png' % (rtype, str('000000%d' % j)[-4:]))
 		plt.savefig(fig_name)
 		
 	
@@ -218,8 +223,8 @@ def numpy_date_to_datetime(numpy_date, tz='UTC'):
 	#
 	return dtm.datetime(*list(numpy_date.tolist().timetuple())[:6] + [numpy_date.tolist().microsecond], tzinfo=pytz.timezone(tz))
 	
-def nepal_intervals_figure(root_prams=nepal_ETAS_prams, **kwargs):
-	#
+def nepal_intervals_figure(root_prams=nepal_ETAS_prams, make_figs=False, fig_dir = '/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal', **kwargs):
+	# 
 	my_prams = root_prams.copy()
 	my_prams.update(kwargs)
 	#
@@ -232,10 +237,14 @@ def nepal_intervals_figure(root_prams=nepal_ETAS_prams, **kwargs):
 	if todt==None: todt = dtm.datetime.now(pytz.timezone('UTC'))
 	dt0 = todt - dtm.timedelta(days=catlen)
 	#
-	cat = bcp.getMFETAScatFromANSS(lons=lons, lats=lats, dates=[dt0, todt], mc=mc)
+	cat = bcp.getMFETAScatFromANSS(lons=lons, lats=lats, dates=[dt0, todt], mc=mc, rec_array=True)
 	#
 	T, dt, M = zip(*[[rw[0], rw[0]-cat[j][0], rw[3]] for j,rw in enumerate(cat[1:])])
 	big_mags = [[rw[0], mc, rw[3]] for rw in cat if rw[3]>=6.5]
+	#
+	mainshock_mag = max(cat['mag'])
+	mainshock_index, mainshock = [(j,rw) for j,rw in enumerate(cat) if rw['mag']==mainshock_mag][0]
+	print "mainshock: ", mainshock
 	
 	f0=plt.figure(0)
 	plt.clf()
@@ -253,15 +262,33 @@ def nepal_intervals_figure(root_prams=nepal_ETAS_prams, **kwargs):
 	ax2.vlines(T, [mc for x in M], M, color='g', linestyle='solid', lw=2.5)
 	ax2.vlines(*zip(*big_mags), color='r', linestyle='solid', lw=2.5)
 	#
-	fig_dir = '/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal'
-	plt.savefig(os.path.join(fig_dir, 'nepal_intervals_ful.png'))
-	ax1.set_xlim(735539.)
-	plt.savefig(os.path.join(fig_dir, 'nepal_intervals_close.png'))
-	ax1.set_xlim(735711., 735715)
-	plt.savefig(os.path.join(fig_dir, 'nepal_intervals_super_close.png'))
-	ax1.set_xlim(7.35711e5+2.2, 7.35711e5+2.5)
-	plt.savefig(os.path.join(fig_dir, 'nepal_intervals_super_duper_close.png'))
+	if make_figs:
+		plt.savefig(os.path.join(fig_dir, 'nepal_intervals_full.png'))
+		#
+		ax1.set_xlim(735539.)
+		plt.savefig(os.path.join(fig_dir, 'nepal_intervals_close.png'))
+		ax1.set_xlim(735711., 735715)
+		plt.savefig(os.path.join(fig_dir, 'nepal_intervals_super_close.png'))
+		ax1.set_xlim(7.35711e5+2.2, 7.35711e5+2.5)
+		plt.savefig(os.path.join(fig_dir, 'nepal_intervals_super_duper_close.png'))
 	
+	#
+	# let's look at an x,y,z t plot...
+	#cat_3d = numpy.rec.array(filter(lambda rw: (rw['lon']>83. and rw['lon']<88.) and (rw['lat']>26.5 and rw['lat']<29.5) and rw['event_date']>=(mainshock[0]-1.), cat), dtype=cat.dtype)
+	cat_3d = [rw for rw in cat if ((rw['lon']>83. and rw['lon']<88.) and (rw['lat']>26.5 and rw['lat']<29.5) and (rw['event_date']>=(mainshock[0]-1.) and rw['event_date']<mpd.datestr2num('2015-05-14')))]
+	#return cat_3d, cat.dtype
+	cat_3d = numpy.core.records.fromarrays(zip(*cat_3d), dtype=cat.dtype)
+	#
+	f3d = plt.figure(1)
+	plt.clf()
+	ax3d = f3d.add_axes([.1, .1, .8, .8], projection='3d')
+	ax3d.plot(cat_3d['lon'], cat_3d['lat'], cat_3d['event_date'], '.')
+	ax3d.plot([mainshock['lon']], [mainshock['lat']], [mainshock['event_date']], 'rD', ms=12)
+	ax3d.plot(*zip(*[[rw['lon'], rw['lat'], rw['event_date']] for rw in cat_3d if rw['mag']>6.28 and rw!=mainshock]), marker='o', color='m', ms=7)
+	#
+	ax3d.set_xlabel('longitude', size=18)
+	ax3d.set_ylabel('latitude', size=18)
+	ax3d.set_zlabel('time $t$ $years$\n', size=18)
 	#
 	#return cat
 

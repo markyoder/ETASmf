@@ -1,3 +1,6 @@
+import matplotlib as mpl
+mpl.use('Agg')
+
 import BASScast as bcp
 import ANSStools as atp
 

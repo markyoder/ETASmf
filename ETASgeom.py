@@ -35,6 +35,9 @@ deg2rad = 2.*math.pi/360.
 # a=egp.etas_auto(to_dt=None, lat_center=38.32, lon_center=142.37, Lr_map_factor=2., mc=5.0, catlen=5.*365., dt_0=None)
 #tohoku_params = {}
 
+# gorkha:
+
+
 
 def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_map_factor=5.0, mc=2.5, mc_0=None, dm_cat=2.0, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, d_lambda=1.76, doplot=False):
 	'''
@@ -46,6 +49,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 		# d_lat_0, d_lon_0, dt_0 are the starting catalog parameters (largest earthquake in d_lat_0 x d_lon_0 x dt_0 cube).
 	'''
 	#
+	lw=2.5
 	# catch some default value exceptions:
 	if dt_0==None: dt_0=10
 	#
@@ -93,7 +97,6 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#working_cat = atp.catfromANSS(lon=[mainshock['lon']-d_lon, mainshock['lon']+d_lon], lat=[mainshock['lat']-d_lat, mainshock['lat']+d_lat], minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	aftershock_cat = atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	#
-	#
 	#cat_map = get_catalog_map(lats=lats, lons=lons, eq_cat = aftershock_cat)
 	cat_map = get_catalog_map(lats=lats, lons=lons)
 	#
@@ -112,7 +115,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 				line_style='-'
 			#
 			Xa, Ya = cat_map(*zip(*circle_geo(lon0=ev['lon'], lat0=ev['lat'], R=lr*1000., d_theta=None, N=250, units_theta='deg', R_units='m')))
-			plt.plot(Xa, Ya, '%s' % line_style, zorder=7, color=_colors[k%len(_colors)])
+			plt.plot(Xa, Ya, '%s' % line_style, zorder=7, color=_colors[k%len(_colors)], lw=lw)
 		x,y = cat_map(ev['lon'], ev['lat'])
 		ev_dtm = ev['event_date'].tolist()
 		lbl_str = 'm=%.2f, %d-%d-%d %d:%d:%d' % (ev['mag'], ev_dtm.year, ev_dtm.month, ev_dtm.day, ev_dtm.hour,ev_dtm.minute,ev_dtm.second)
@@ -128,7 +131,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	# and for now, let's plot time-links (lines betwen sequential events):
 	for k, ev in enumerate(aftershock_cat[1:]):
 		X,Y = cat_map([aftershock_cat[k]['lon'], ev['lon']], [aftershock_cat[k]['lat'], ev['lat']])
-		plt.plot(X,Y, '.-', ms=8, color=_colors[k%len(_colors)], zorder=5)
+		plt.plot(X,Y, '.-', ms=8, color=_colors[k%len(_colors)])
 	#
 	f=plt.figure(1)
 	plt.clf()
@@ -160,7 +163,20 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	ax3d3.set_ylabel('latitude')
 	ax3d3.set_xlabel('longitude')
 	ax3d3.set_zlabel('depth $z$')
-
+	#
+	#
+	#print "mainshock: ", mainshock, mainshock['event_date']
+	cat = atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=[mpd.num2date(mainshock['event_date_float']-1.0), to_dt], fout=None, rec_array=True)
+	f=plt.figure(4)
+	plt.clf()
+	ax3d = f.add_axes([.1, .1, .8, .8], projection='3d')
+	ax3d.plot(cat['lon'], cat['lat'], cat['event_date_float'], 'o')
+	#
+	#
+	ax3d.set_title('All quakes, lat, lon, time')
+	ax3d.set_ylabel('latitude')
+	ax3d.set_xlabel('longitude')
+	ax3d.set_zlabel('time')
 	
 	return aftershock_cat
 	#return atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=False)

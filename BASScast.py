@@ -542,7 +542,7 @@ class BASScast(object):
 		return None
 	'''
 		
-	def BASScastContourMap(self, X_i=None, Y_i=None, Z2d=None, fignum=1, maxNquakes=250.0, alpha=.75, lats=None, lons=None):
+	def BASScastContourMap(self, X_i=None, Y_i=None, Z2d=None, fignum=1, maxNquakes=250.0, alpha=.75, lats=None, lons=None, fig_size=(6,6)):
 		#
 		if X_i==None: X_i = self.X_i
 		if Y_i==None: Y_i = self.Y_i
@@ -551,7 +551,7 @@ class BASScast(object):
 		if lats==None: lats=self.latrange
 		if lons==None: lons=self.lonrange
 		#
-		plt.figure(fignum)
+		plt.figure(fignum, fig_size)
 		plt.clf()
 		#plt.ion()
 		#
@@ -2608,7 +2608,7 @@ def date_type_fixer(date_in):
 	else:
 		return date_in
 
-def getMFETAScatFromANSS(lons=[-121.0, -114.0], lats=[31.0, 37.0], dates=[None, None], mc=4.0):
+def getMFETAScatFromANSS(lons=[-121.0, -114.0], lats=[31.0, 37.0], dates=[None, None], mc=4.0, rec_array=False):
 	if dates==None: dates=[None, None]
 	if dates[1]==None: dates[1]=dtm.datetime.now(pytz.timezone('UTC'))
 	if dates[0]==None or dates[0]>=dates[1]: dates[0]=dates[1]-dtm.timedelta(days=840)
@@ -2647,7 +2647,12 @@ def getMFETAScatFromANSS(lons=[-121.0, -114.0], lats=[31.0, 37.0], dates=[None, 
 	# or
 	# return [[f(rw[col]) for col,f in zip(['event_date', 'lat', 'lon', 'mag', 'depth'], [date_type_fixer]+[lambda x:x for j in xrange(4)])]]
 	# 
-	return [[mpd.date2num(date_type_fixer(rw[0])), rw[1], rw[2], rw[3], rw[4]] for rw in clist1]
+	if rec_array:
+		# numpy.rec.array((rlist if len(rlist)>0 else [[]]), dtype=[('event_date', 'M8[us]'), ('lat','f8'), ('lon','f8'), ('mag','f8'), ('depth','f8'), ('event_date_float', 'f8')])
+		return numpy.rec.array(([[mpd.date2num(date_type_fixer(rw[0])), rw[1], rw[2], rw[3], rw[4]] for rw in clist1] if len(clist1)>0 else [[]]), names=['event_date', 'lat', 'lon', 'mag', 'depth'], formats=['double' for x in clist1[0:5]]) 
+	# 
+	else:
+		return [[mpd.date2num(date_type_fixer(rw[0])), rw[1], rw[2], rw[3], rw[4]] for rw in clist1]
 
 def checkPoly(inpoly, fignum=None):
 	# polygons are getting mangled by the "find closest neighbor" algarithm.
