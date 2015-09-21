@@ -5,7 +5,7 @@
 
 import BASScast as bcp
 import ANSStools as atp
-
+import ETASscripts as esp
 
 import numpy
 import pylab as plt
@@ -37,9 +37,64 @@ deg2rad = 2.*math.pi/360.
 
 # gorkha:
 
+# mainshock data+1
+sischuan_prams = {'to_dt':dtm.datetime(2008,6,12, tzinfo=pytz.timezone('UTC')), 'mainshock_dt':dtm.datetime(2008,5,13, tzinfo=pytz.timezone('UTC')), 'lat_center':31.021, 'lon_center':103.367, 'Lr_map_factor':4.0, 'mc':4.0, 'mc_0':None, 'dm_cat':2.0, 'gridsize':.1, 'fnameroot':'etas_auto_sichuan', 'catlen':10.0*365., 'd_lambda':1.76, 'doplot':True}
+#sischuan_prams['to_dt'] = dtm.datetime(2014,4,20, tzinfo=pytz.timezone('UTC'))
+sischuan_prams['todt'] = dtm.datetime.now(pytz.timezone('UTC'))
+
+def mod_kwargs(prams_dict, **kwargs):
+	r_dict = prams_dict.copy()
+	r_dict.update(kwargs)
+	return r_dict
+
+def chengdus():
+	A=chengdu_etas(prams=sischuan_prams, catlen=5.*365.)
+	plt.figure(1)
+	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
+	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr_b.png'))
+	f3d = contour_3d_etas(A)
+	
+	A=chengdu_etas(prams=sischuan_prams, catlen=10.*365.)
+	plt.figure(1)
+	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
+	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr_b.png'))
+	
+	return A
 
 
-def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_map_factor=5.0, mc=2.5, mc_0=None, dm_cat=2.0, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, d_lambda=1.76, doplot=False):
+def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
+	# ,to_dt=dtm.datetime.now(pytz.timezone('UTC'))
+	#A=esp.makeETASFCfiles(**mod_kwargs(sichuan_prams, catlen=3650.))
+	#
+	prams = mod_kwargs(prams,**kwargs)
+	#prams.update({'lats':[31.021-dlat, 31.021+dlat], 'lons':[103.367-dlon, 103.367+dlon]})
+	print "prams: ", prams['todt']
+	#
+	A=esp.make_etas_fcfiles(prams, lats=[31.021-dlat, 31.021+dlat], lons=[103.367-dlon, 103.367+dlon])
+	#A=esp.makeETASFCfiles(todt=None, gridsize=.1, contres=3, mc=4.0, kmldir='kml', catdir='kml', fnameroot='chengdu_etas', catlen=prams['catlen'], doplot=False, lons=prams['lons'], lats=prams['lats'], bigquakes=[], bigmag=6.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None)
+	#
+	chengdu_lon = 104.+4./60.
+	chengdu_lat = 30. + 2./3.
+	#
+	A.BASScastContourMap(maxNquakes=5)	# could also use lats=[], lons=[]
+	x,y = A.cm(chengdu_lon, chengdu_lat)
+	A.cm.plot([x], [y], 'r*', ms=15, zorder=8, alpha=.7)
+	A.cm.plot([x], [y], 'r*', ms=18, zorder=7, alpha=.7)
+	#
+	for rw in A.catalog:
+		if rw[3]<6.5: continue
+		if rw[0]<mpd.date2num(dtm.datetime(2007,1,1, tzinfo=pytz.timezone('UTC'))): continue
+		#
+		x,y = A.cm(rw[2], rw[1])
+		dt = mpd.num2date(rw[0])
+		plt.plot([x], [y], 'o', ms=9.*rw[3]/8., zorder=5, label='m=%.2f, %d/%d/%d' % (rw[3], dt.year, dt.month, dt.day))
+	#
+	plt.legend(loc=0, numpoints=1)
+	#
+	return A
+>>>>>>> ab2fc4c2b1af22439cf699efdca7a18cdc3b8980
+
+def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_map_factor=5.0, mc=2.5, mc_0=None, dm_cat=2.0, gridsize=.1, to_dt=None, mainshock_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, d_lambda=1.76, doplot=False, show_legend=True):
 	'''
 	# , Lr_as_factor=.5
 	# a version of this exists also in ETASscripts.py, but for now let's just develop separately.
@@ -59,6 +114,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#if to_dt == None: to_dt = dtm.datetime.now(pytz.timezone('UTC'))
 	to_dt = (to_dt or dtm.datetime.now(pytz.timezone('UTC')))
 	mc_0  = (mc_0 or mc)
+	mainshock_dt = (mainshock_dt or to_dt)
 	#
 	if lon_center==None and lat_center==None:
 		# let's look for any large earthquake in the world. assume for this, mc
@@ -69,7 +125,8 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 		d_lon_0 = -180.
 	#
 	# get a preliminary catalog:
-	cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), to_dt], fout=None, rec_array=True)
+	#cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), to_dt], fout=None, rec_array=True)
+	cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), mainshock_dt], fout=None, rec_array=True)
 	# diagnostic: output catalog length
 	print "catalog length: %d" % len(cat_0)
 	#
@@ -95,7 +152,11 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	print "mainshock found: ", mainshock, ".\nNow, find aftershocks..."
 	#
 	#working_cat = atp.catfromANSS(lon=[mainshock['lon']-d_lon, mainshock['lon']+d_lon], lat=[mainshock['lat']-d_lat, mainshock['lat']+d_lat], minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
-	aftershock_cat = atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
+	primary_cat = atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
+	#
+	if not doplot: return primary_cat
+	aftershock_cat = numpy.core.records.fromarrays(zip(*filter(lambda rw: rw['mag']>=(mainshock['mag']-dm_cat), primary_cat)),dtype=primary_cat.dtype)
+	
 	#
 	#cat_map = get_catalog_map(lats=lats, lons=lons, eq_cat = aftershock_cat)
 	cat_map = get_catalog_map(lats=lats, lons=lons)
@@ -125,8 +186,9 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 		if ev['event_date']==mainshock['event_date']: marker_str = '*'
 		if ev['event_date']>mainshock['event_date']: marker_str = 'o'
 		#
-		plt.plot([x], [y], marker_str, ms=15.*ev['mag']/8.0, color=_colors[k%len(_colors)], label=lbl_str)
-	plt.legend(loc=0, numpoints=1)
+		plt.plot([x], [y], marker_str, ms=15.*ev['mag']/8.0, color=_colors[k%len(_colors)], label=lbl_str, zorder=7)
+	if show_legend: plt.legend(loc=0, numpoints=1)
+	plt.plot(*cat_map(primary_cat['lon'], primary_cat['lat']), marker='.', ls='', ms=3., zorder=5, alpha=.6)
 	#
 	# and for now, let's plot time-links (lines betwen sequential events):
 	for k, ev in enumerate(aftershock_cat[1:]):
@@ -178,10 +240,32 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	ax3d.set_xlabel('longitude')
 	ax3d.set_zlabel('time')
 	
-	return aftershock_cat
+	#return aftershock_cat
+	return primary_cat
 	#return atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=False)
 	
 	#return biggest_earthquake
+#
+def moment_figure():
+	c1 = etas_auto(**mod_kwargs(sichuan_prams, doplot=False))
+	M = lambda x: 10.**(1.0*x)
+	#
+	M_cum = [M(c1['mag'][0])]
+	for m in c1['mag'][1:]:
+		M_cum+=[M_cum[-1]+M(m)]
+	#
+	#f_cat = [[mpd.date2num(rw[0].tolist()), mpd.date2num(rw['event_date'].tolist())-mpd.date2num(c1[j]['event_date'].tolist()), rw['mag']] for j,rw in c1]
+	#
+	plt.figure(17)
+	plt.clf()
+	ax=plt.gca()
+	mcy = min(c1['mag'])
+	print "mcy: ", mcy
+	#return c1['event_date'], [mcy for x in c1['mag']]
+	ax.vlines([x.tolist() for x in c1['event_date']], [mcy for x in c1['mag']], c1['mag'], lw=2., color='r')
+	ax2=ax.twinx()
+	ax2.set_yscale('linear')
+	ax2.plot([x.tolist() for x in c1['event_date']], M_cum, '.-', lw=2.5)
 #
 def Lr(m, fact=.5, d_lambda=1.76):
 	return fact*10.**(.5*m - d_lambda)

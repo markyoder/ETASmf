@@ -12,15 +12,20 @@ import glob
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mpd
-
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
+from mpl_toolkits.mplot3d import axes3d
+
+import numpy
 
 import multiprocessing as mpp
 import cPickle
 
 kmldir='kml'
 catdir='kml'
+
+lon2km=111.1
+deg2rad = math.pi*2.0/360.
 
 def japan_pacific_2015_m78():
 	E=esp.makeETASFCfiles(todt=esp.dtm.datetime.now(esp.pytz.timezone('UTC')), contres=8, mc=4.0, bigmag=6.5, lons=[140.5-5., 150.5+5.], lats=[27.83-5., 27.83+5.])
@@ -107,7 +112,11 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 	#
 	#os.system('pfmovie$ mencoder mf://*.jpg -mf w=800:h=600:fps=5:type=jpg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o pfmovie.avi')
 #
-tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot_1300pst':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+#
+chengdu_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'chengdu', 'catlen':5.0*365.0, 'doplot':False, 'lons':[100.367, 106.367], 'lats':[31.06-3., 31.06+3.], 'bigquakes':None, 'bigmag':6.7, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+
+#'lat_center':31.021, 'lon_center':103.367
 #
 nepal_epi_lon = 84.698
 nepal_epi_lat = 28.175
@@ -115,7 +124,7 @@ nepal_dlon = 5.
 nepal_dlat = 5.
 nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
-def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_factor=3.0, mc=2.5, mc_0=None, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, doplot=False):
+def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_factor=4.0, mc=2.5, mc_0=None, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, doplot=False, kmldir='kml_auto', **kwargs):
 	'''
 	# a starter script to auto-select some parameters for an ETAS run. in practice, give this script a center location (probably a mainshock epicenter).
 	# the script will find the largest earthquake in that region and scale up an ETAS parameter set accordingly.
@@ -142,22 +151,78 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#
 	# now, get new map domain based on rupture length, etc.
 	L_r = .5*10.0**(.5*mainshock['mag'] - 1.76)
-	d_lat = L_r/lon2km
-	d_lat = L_r/(lon2km*math.cos(deg2rad*mainshock['lat']))
+	d_lat = Lr_factor*L_r/lon2km
+	d_lon = Lr_factor*L_r/(lon2km*math.cos(deg2rad*mainshock['lat']))
+	print "mainshock data: ", mainshock, L_r, d_lat, d_lon
 	#
 	working_cat = atp.catfromANSS(lon=[mainshock['lon']-d_lon, mainshock['lon']+d_lon], lat=[mainshock['lat']-d_lat, mainshock['lat']+d_lat], minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
-	
 	#
-	print "biggest event(s): ", biggest_earthquake
+	print "biggest event(s): ", [rw for rw in working_cat if rw['mag']==max(working_cat['mag'])]
 	#
 	# now, do some ETAS:
 	# skip working_cat above, but parse lon, lat, etc. parameters similarly. pass those (and other) params to make_etas_fcfiles()
-	root_prams = {}
-	my_kwargs = {}
-	etas = make_etas_fcfiles(root_prams=root_prams, **my_kwargs)
+	# looks like this: make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs), and:
+	# nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+	root_prams = {'todt':None, 'gridsize':gridsize, 'contres':10, 'mc':mc, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':fnameroot, 'catlen':catlen, 'doplot':False, 'lons':[mainshock['lon']-d_lon, mainshock['lon']+d_lon], 'lats':[mainshock['lat']-d_lat, mainshock['lat']+d_lat], 'big_quakes':None, 'bigmag':mainshock['mag']-1.5, 'eqtheta':None, 'eqeps':None, 'figtfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+	#root_prams = {}
+	print "now execute with root_prams: ", root_prams
+	#my_kwargs = {}
+	etas = make_etas_fcfiles(root_prams=root_prams, **kwargs)
+	#
+	#return biggest_earthquake
+	return etas
+#
+def contour_3d_etas(etas_object, fignum=0):
+	# take a BASScast object as an input (for now).
+	#
+	X0,Y0,Z = etas_object.X_i, etas_object.Y_i, etas_object.Z2d
+	#
+	min_z = min([min(rw) for rw in Z])
+	max_z = max([max(rw) for rw in Z])
+	#
+	# get 2d mesh-arrays:
+	X,Y = numpy.meshgrid(X0,Y0)
+	#
+	# find and plot mainshock:
+	ms_mag = max([rw[3] for rw in etas_object.catalog])
+	mainshock = filter(lambda rw:rw[3]==ms_mag, etas_object.catalog)
+	chengdu = {'lon':104.+4./60., 'lat':30. + 2./3.}
+	# 
+	# find z-value:
+	#delta_xs = sorted([[j,(mainshock[2]-x)**2.] for j,x in enumerate(X0)], key=lambda rw:rw[1])
+	#delta_ys = sorted([[j,(mainshock[1]-y)*2.] for j,y in enumerate(Y0)], key=lambda rw:rw[1])
+	delta_xs = sorted([[j,(chengdu['lon']-x)**2.] for j,x in enumerate(X0)], key=lambda rw:rw[1])
+	delta_ys = sorted([[j,(chengdu['lat']-y)**2.] for j,y in enumerate(Y0)], key=lambda rw:rw[1])
+	j_ms = delta_xs[0][0]
+	k_ms = delta_ys[0][0]
+	#z_ms = delta_ys[k_ms][j_ms]
+	z_chengdu = Z[k_ms][j_ms] + .5
+	#print "xy: ", X[j_ms][k_ms], Y[j_ms][k_ms], " :: ", X[k_ms][j_ms], Y[k_ms][j_ms]
+	#
+	fg=plt.figure(fignum)
+	plt.clf()
+	ax=fg.gca(projection='3d')
+	mycm = cmx.spectral
+	ax.plot_surface(X,Y,Z, rstride=1, cstride=1, alpha=.6, cmap=mycm)
+	#ax.plot([chengdu['lon']], [chengdu['lat']], [z_chengdu], marker='o', color='r', ms=12)
+	#ax.plot([chengdu['lon']], [chengdu['lat']], [-12.], marker='s', color='r', ms=12)
 	
-	return biggest_earthquake
+	cset = ax.contourf(X, Y, Z, zdir='z', offset=min_z-0.*.25*(max_z-min_z), cmap=mycm)
+	#cset = ax.contourf(X, Y, Z, zdir='x', offset=min(X0), cmap=mycm)
+	#cset = ax.contourf(X, Y, Z, zdir='y', offset=max(Y0), cmap=mycm)
 	
+	#cset = ax.contourf(X, Y, Z, zdir='z', cmap=cmx.coolwarm)
+	#cset = ax.contourf(X, Y, Z, zdir='x', cmap=cmx.coolwarm)
+	#cset = ax.contourf(X, Y, Z, zdir='y', cmap=cmx.coolwarm)
+
+
+	ax.set_xlabel('lon')
+	#ax.set_xlim(-40, 40)
+	ax.set_ylabel('lat')
+	#ax.set_ylim(-40, 40)
+	ax.set_zlabel('$\\log(rate)$')
+	#ax.set_zlim(-100, 100)
+		
 	
 #
 def make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs):
@@ -185,7 +250,7 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 	#
 	return poly + [poly[0]]
 #
-def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None):
+def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None, **kwargs):
 	# general script to make ETAS forecast files (default values -> parkfield).
 	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))
 	maxNquakes == int((1 or maxNquakes))
@@ -1134,5 +1199,9 @@ def etasFigs7():
 	#
 	plt.savefig('figs/elmayorETAS-threshSatPL-20100401.png')
 	
-
+if __name__=='__main__':
+	pass
+	# but eventually, do the mpl.use('Agg') or whatever puts mpl into the background...
+else:
+	plt.ion()
 
