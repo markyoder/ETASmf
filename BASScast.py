@@ -2250,7 +2250,14 @@ class earthquake(locbase):
 			# but that will be expensive, and for now we just want relative inensities.
 		if rtype=='ssim_inv_gamma':
 			L_r = 1.0*10.0**(.5*self.mag - 1.76)
-			radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*numpy.exp(-L_r/rprime)
+			# include the factor of .1*r0ssim as a quick fix to an x/0 problem? since this makes the exp part -> 0, we 
+			# could just catch it and replace the exponential factor -> 0.
+			#
+			#this_r = max(rprime, 1.0/sys.float_info.max)
+			#radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*numpy.exp(-L_r/rprime)
+			#radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*numpy.exp(-L_r/this_r)
+			radialDens = (q-1.0)*(r0ssim**(q-1.0))*((r0ssim + rprime)**(-q))*numpy.exp(-L_r/(rprime + .01*r0ssim))
+			#
 			# and again, there's a normalization constant to be had here. this one is fairly straight forward
 			# (i think), but still costly and we mostly want relative rates.
 		#

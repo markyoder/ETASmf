@@ -50,6 +50,7 @@ def chengdus():
 	plt.figure(1)
 	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
 	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr_b.png'))
+	f3d = contour_3d_etas(A)
 	
 	A=chengdu_etas(prams=sischuan_prams, catlen=10.*365.)
 	plt.figure(1)
@@ -57,7 +58,7 @@ def chengdus():
 	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr_b.png'))
 	
 	return A
-	
+
 
 def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 	# ,to_dt=dtm.datetime.now(pytz.timezone('UTC'))
