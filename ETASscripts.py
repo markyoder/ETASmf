@@ -163,7 +163,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	# skip working_cat above, but parse lon, lat, etc. parameters similarly. pass those (and other) params to make_etas_fcfiles()
 	# looks like this: make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs), and:
 	# nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
-	root_prams = {'todt':None, 'gridsize':gridsize, 'contres':10, 'mc':mc, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':fnameroot, 'catlen':catlen, 'doplot':False, 'lons':[mainshock['lon']-d_lon, mainshock['lon']+d_lon], 'lats':[mainshock['lat']-d_lat, mainshock['lat']+d_lat], 'big_quakes':None, 'bigmag':mainshock['mag']-1.5, 'eqtheta':None, 'eqeps':None, 'figtfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+	root_prams = {'todt':None, 'gridsize':gridsize, 'contres':10, 'mc':mc, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':fnameroot, 'catlen':catlen, 'doplot':False, 'lons':[mainshock['lon']-d_lon, mainshock['lon']+d_lon], 'lats':[mainshock['lat']-d_lat, mainshock['lat']+d_lat], 'bigquakes':None, 'bigmag':mainshock['mag']-1.5, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 	#root_prams = {}
 	print "now execute with root_prams: ", root_prams
 	#my_kwargs = {}
