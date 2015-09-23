@@ -1,23 +1,42 @@
+#!/usr/bin/python
+#
+# ETASscripts.py:
+#
+# Primary Author: Mark R. Yoder, Ph.D.
+#                 mryoder@ucdavis.edu
+#                 mark.yoder@gmail.com
+#
+# This is the main, go-to script for ETAS map generation. The core ETAS module is BASScast.py (aka, BASS-forecast); in this module, we have scripts
+# to gather specific catalogs, produce ETAS forecasts, plot the forecast on maps, decorate maps, generate output files (figures, .kml, .csv, etc.).
+# this includes some general tools; see epecially:
+# - etas_auto()
+# - makeETASFCfiles()
+# - make_etas_fcfiles()  (which is basically a wrapper for makeETASFCfiles() with different/generalized input formatting.
+#
+# then, see a bunch of specific scripts (sadly, many evolving generations of them) that call some of these functions. the idea, in general, is to develop
+# scripts that are easy to use (aka, a single command-line call), but that don't end up being a nasty spaghetti code or requiring too much cut-n-pasting.
+# unfortunately, there does not appear to be a magic formula for this, but we seem to be closing in on something.
+# 
+#
 import matplotlib as mpl
 mpl.use('Agg')
-
+#
 import BASScast as bcp
-import ANSStools as atp
-
+import ANSStools as atp     # a yoder et al. script in my "common" git repository. simple tools to fetch catalogs from ANSS.
+#
 import datetime as dtm
 import pytz
 import os
 import math
 import glob
-
+import numpy
+#
 import matplotlib.pyplot as plt
 import matplotlib.dates as mpd
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from mpl_toolkits.mplot3d import axes3d
-
-import numpy
-
+#
 import multiprocessing as mpp
 import cPickle
 
@@ -26,14 +45,29 @@ catdir='kml'
 
 lon2km=111.1
 deg2rad = math.pi*2.0/360.
+#
+# some parameter sets for important earthquakes:
+#
+tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
+#
+chengdu_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'chengdu', 'catlen':5.0*365.0, 'doplot':False, 'lons':[100.367, 106.367], 'lats':[31.06-3., 31.06+3.], 'bigquakes':None, 'bigmag':6.7, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 
+#'lat_center':31.021, 'lon_center':103.367
+#
+nepal_epi_lon = 84.698
+nepal_epi_lat = 28.175
+nepal_dlon = 5.
+nepal_dlat = 5.
+nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}#
+#
+#
 def japan_pacific_2015_m78():
 	E=esp.makeETASFCfiles(todt=esp.dtm.datetime.now(esp.pytz.timezone('UTC')), contres=8, mc=4.0, bigmag=6.5, lons=[140.5-5., 150.5+5.], lats=[27.83-5., 27.83+5.])
 	mymapy = E.BASScastContourMap(maxNquakes=3)
 	
 	return E
-	
-	
+#	
+# Some scripts to run some standard california ETAS sets.
 def makeCaliFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=3, fcmc=2.0, kmldir='kml', catdir='kml', catlen=5.0*365.0):
 	norcalkml = kmldir + '/norcalconts.kml'
 	socalkml = kmldir + '/socalconts.kml'
@@ -43,7 +77,6 @@ def makeCaliFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, cont
 	socalcat = catdir + '/socal.cat'
 	calnevcat = catdir + '/calnev.cat'
 	#
-	
 	print "make parkfield."
 	c=makeParkfieldETAS()
 	print "make el mayor."
@@ -52,12 +85,15 @@ def makeCaliFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, cont
 	a=makeSocalETAS()
 	print "make norcal"
 	b=makeNorcalETAS()
-	
+	#
 	print "finished."
 	#
 	return None
 
 def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dtend=dtm.datetime(2004,12,31, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), dt=10, outdir='pfmovie'):
+	'''
+	# make a bunch of parkfield ETAS frames; put them together into a movie.
+	'''
 	mylons = [-120.75, -119.5]	# -120.75
 	mylats = [35.5, 36.5]		# 35.5
 	#
@@ -111,21 +147,12 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 		fout.close()
 	#
 	#os.system('pfmovie$ mencoder mf://*.jpg -mf w=800:h=600:fps=5:type=jpg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o pfmovie.avi')
-#
-tohoku_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':3, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'tohoku', 'catlen':5.0*365.0, 'doplot':False, 'lons':[135., 146.], 'lats':[30., 41.5], 'bigquakes':None, 'bigmag':7.50, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
-#
-chengdu_ETAS_prams = {'todt':dtm.datetime.now(pytz.timezone('UTC')), 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'chengdu', 'catlen':5.0*365.0, 'doplot':False, 'lons':[100.367, 106.367], 'lats':[31.06-3., 31.06+3.], 'bigquakes':None, 'bigmag':6.7, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 
-#'lat_center':31.021, 'lon_center':103.367
-#
-nepal_epi_lon = 84.698
-nepal_epi_lat = 28.175
-nepal_dlon = 5.
-nepal_dlat = 5.
-nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 #
 def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_factor=4.0, mc=2.5, mc_0=None, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, doplot=False, kmldir='kml_auto', **kwargs):
 	'''
+	# this is probably a major staple of future work in ETAS; when in doubt, start here and point it at a big earthquake.
+	#
 	# a starter script to auto-select some parameters for an ETAS run. in practice, give this script a center location (probably a mainshock epicenter).
 	# the script will find the largest earthquake in that region and scale up an ETAS parameter set accordingly.
 		# d_lat_0, d_lon_0, dt_0 are the starting catalog parameters (largest earthquake in d_lat_0 x d_lon_0 x dt_0 cube).
@@ -173,6 +200,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	return etas
 #
 def contour_3d_etas(etas_object, fignum=0):
+    # make a 3d ETAS figure (aka, a 3d surface showing ETAS rates).
 	# take a BASScast object as an input (for now).
 	#
 	X0,Y0,Z = etas_object.X_i, etas_object.Y_i, etas_object.Z2d
@@ -222,12 +250,11 @@ def contour_3d_etas(etas_object, fignum=0):
 	#ax.set_ylim(-40, 40)
 	ax.set_zlabel('$\\log(rate)$')
 	#ax.set_zlim(-100, 100)
-		
-	
 #
 def make_etas_fcfiles(root_prams=nepal_ETAS_prams, **kwargs):
 	'''
 	# a wrapper for fast etas code development.
+	# wraps makeETASFCfiles() but takes generalized input format.
 	'''
 	if not isinstance(root_prams, dict): root_prams = {}
 	#
@@ -252,6 +279,9 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 #
 def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC')), gridsize=.1, contres=3, mc=1.5, kmldir='kml', catdir='kml', fnameroot='parkfield', catlen=5.0*365.0, doplot=False, lons=[-120.75, -119.5], lats=[35.75, 36.5], bigquakes=[], bigmag=3.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None, **kwargs):
 	# general script to make ETAS forecast files (default values -> parkfield).
+	# this is the real go-to script. this takes in a bunch of parameters (where, what range, when, how many contours, etc.), generates a BASScast forecast,
+	# then generates some standard output files.
+	#
 	if todt==None: todt=dtm.datetime.now(pytz.timezone('UTC'))
 	maxNquakes == int((1 or maxNquakes))
 	#
@@ -296,11 +326,14 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	# epsilon, theta and correcting them to use at least [5],[6]... or we just add a dict. object as an item in the list?
 	# ... you know what, screw it. let's just call the correct cols here. we'll fix the scenario later if need be.
 	#cat = map(operator.itemgetter(0,1,2,3), cat)
+	# note: a newer version of getMFETAScatFromANSS() returns a recarray, so we can be more explicit about which columns we use.
 	#
 	if len(cat)==0:
 		print "no available data."
 		return None
 	# returns "catalog" like: catalog+=[[mpd.date2num(rw[0]), rw[1], rw[2], rw[3], rw[4]]] (aka, a list of [float-dtm, lat, lon, mag, dpth]
+	#
+	# addquakes: do we want to add any other earthquakes into the catalog before we calculate ETAS?
 	print "addquakes: %d" % len(addquakes)
 	if len(addquakes)>0:
 		for qk in addquakes:

@@ -1,3 +1,13 @@
+# china_2015_scripts.py
+#
+# Primary Author: Mark R. Yoder, Ph.D.
+#                 mryoder@ucdavis.edu
+#                 mark.yoder@gmail.com
+#
+# A bunch of scripts to develop figures, data, and materials for talks for talks given at the 2015 ACES meeting in Chengdu China.
+# These scripts are pretty specific to their purpose, but they also provide some examples of how to use more generalized scripts
+# and tools, including generating ETAS forecasts/figures.
+#
 # some scripts and notes for China_2015 talk(s):
 
 import ETASscripts as esp

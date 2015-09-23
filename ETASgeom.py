@@ -1,5 +1,19 @@
+# ETASgeom.py: ETAS Geometry
 #
-# a study of aftershock geometry, namely large-aftershock distributions.
+# Primary Author: Mark R. Yoder, Ph.D.
+#                 mryoder@ucdavis.edu
+#                 mark.yoder@gmail.com
+#
+# This is some very, very preliminary work based on some recent publications (Tahir et al. 2012, Zalohar 2014, in a less direct way Yoder et al. 2015(2014 online)
+# and some others that basically stipulates that large aftershocks tend to occur *outside* the mainshock rupture area (in the case of Tahir et al. 2012 and Zalohar 2014,
+# specifically a mainshock's *largest* aftershock).
+#
+# so in these scripts, we have some more or less graphical investigations (until quantitiative methods can be developed) showing the relationship between the
+# locations of large aftershocks and mainshock ruptures. excellent examples of this behavior can be observed in Nepal 2015 and Wenshuan (China) 2008.
+#
+# a lot of this code was put together very quickly during the 2015 ACES meeting in Chengdu, China, in preparation to give a talk about ETAS 
+#
+#
 #
 #
 
@@ -40,24 +54,27 @@ deg2rad = 2.*math.pi/360.
 # mainshock data+1
 sischuan_prams = {'to_dt':dtm.datetime(2008,6,12, tzinfo=pytz.timezone('UTC')), 'mainshock_dt':dtm.datetime(2008,5,13, tzinfo=pytz.timezone('UTC')), 'lat_center':31.021, 'lon_center':103.367, 'Lr_map_factor':4.0, 'mc':4.0, 'mc_0':None, 'dm_cat':2.0, 'gridsize':.1, 'fnameroot':'etas_auto_sichuan', 'catlen':10.0*365., 'd_lambda':1.76, 'doplot':True}
 #sischuan_prams['to_dt'] = dtm.datetime(2014,4,20, tzinfo=pytz.timezone('UTC'))
-sischuan_prams['todt'] = dtm.datetime.now(pytz.timezone('UTC'))
+sischuan_prams['to_dt'] = dtm.datetime.now(pytz.timezone('UTC'))
 
-def mod_kwargs(prams_dict, **kwargs):
-	r_dict = prams_dict.copy()
-	r_dict.update(kwargs)
-	return r_dict
-
-def chengdus():
-	A=chengdu_etas(prams=sischuan_prams, catlen=5.*365.)
+def chengdus(mc=3.0, savefig=False):
+	# some bits to make ETAS maps of Chengdu area.
+	#
+	print "*** calc chengdu etas for 5 years..."
+	A=chengdu_etas(prams=sischuan_prams, mc=mc, catlen=5.*365.)
+	print "*** finished 5 year chengdu etas..."
 	plt.figure(1)
-	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
-	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr_b.png'))
-	f3d = contour_3d_etas(A)
-	
-	A=chengdu_etas(prams=sischuan_prams, catlen=10.*365.)
+	plt.title('Chengdu ETAS(5 yr): %s\n' % str(sischuan_prams['to_dt']))
+	if savefig: plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr_b.png'))
+	print "*** now do 3d contour bit"
+	f3d = esp.contour_3d_etas(A)
+	#
+	print "*** cal chengdu etas for 10 years..."
+	A=chengdu_etas(prams=sischuan_prams, mc=mc, catlen=10.*365.)
+	print "*** finished 10 year chengdu etas..."
 	plt.figure(1)
-	plt.title('Chengdu ETAS: %s\n' % str(sischuan_prams['todt']))
-	plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr_b.png'))
+	plt.clf()
+	plt.title('Chengdu ETAS(10 yr): %s\n' % str(sischuan_prams['to_dt']))
+	if savefig: plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_10yr_b.png'))
 	
 	return A
 
@@ -68,10 +85,10 @@ def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 	#
 	prams = mod_kwargs(prams,**kwargs)
 	#prams.update({'lats':[31.021-dlat, 31.021+dlat], 'lons':[103.367-dlon, 103.367+dlon]})
-	print "prams: ", prams['todt']
+	print "prams: ", prams['to_dt']
 	#
 	A=esp.make_etas_fcfiles(prams, lats=[31.021-dlat, 31.021+dlat], lons=[103.367-dlon, 103.367+dlon])
-	#A=esp.makeETASFCfiles(todt=None, gridsize=.1, contres=3, mc=4.0, kmldir='kml', catdir='kml', fnameroot='chengdu_etas', catlen=prams['catlen'], doplot=False, lons=prams['lons'], lats=prams['lats'], bigquakes=[], bigmag=6.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None)
+	#A=esp.makeETASFCfiles(to_dt=None, gridsize=.1, contres=3, mc=4.0, kmldir='kml', catdir='kml', fnameroot='chengdu_etas', catlen=prams['catlen'], doplot=False, lons=prams['lons'], lats=prams['lats'], bigquakes=[], bigmag=6.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None)
 	#
 	chengdu_lon = 104.+4./60.
 	chengdu_lat = 30. + 2./3.
@@ -92,7 +109,6 @@ def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 	plt.legend(loc=0, numpoints=1)
 	#
 	return A
->>>>>>> ab2fc4c2b1af22439cf699efdca7a18cdc3b8980
 
 def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_map_factor=5.0, mc=2.5, mc_0=None, dm_cat=2.0, gridsize=.1, to_dt=None, mainshock_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, d_lambda=1.76, doplot=False, show_legend=True):
 	'''
@@ -102,6 +118,8 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	# a starter script to auto-select some parameters for an ETAS run. in practice, give this script a center location (probably a mainshock epicenter).
 	# the script will find the largest earthquake in that region and scale up an ETAS parameter set accordingly.
 		# d_lat_0, d_lon_0, dt_0 are the starting catalog parameters (largest earthquake in d_lat_0 x d_lon_0 x dt_0 cube).
+	#
+	# i think this is an earlier version of a similar (nearly identical?) script in ETASscripts
 	'''
 	#
 	lw=2.5
@@ -211,13 +229,13 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	plt.clf()
 	ax3d2 = f.add_axes([.1, .1, .8, .8], projection='3d')
 	ax3d2.plot(aftershock_cat['lon'][1:], aftershock_cat['lat'][1:], numpy.log10(aftershock_cat['event_date_float'][1:]-aftershock_cat['event_date_float'][0]), 'o-')
-	
+	#
 	ax3d2.set_ylabel('latitude')
 	ax3d2.set_xlabel('longitude')
 	ax3d2.set_zlabel('$log(\\Delta t)$')
-		
+	#
 	print "log(dt): ", numpy.log10(aftershock_cat['event_date_float'][1:]-aftershock_cat['event_date_float'][0])
-	
+	#
 	f=plt.figure(3)
 	plt.clf()
 	ax3d3 = f.add_axes([.1, .1, .8, .8], projection='3d')
@@ -225,7 +243,6 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	ax3d3.set_ylabel('latitude')
 	ax3d3.set_xlabel('longitude')
 	ax3d3.set_zlabel('depth $z$')
-	#
 	#
 	#print "mainshock: ", mainshock, mainshock['event_date']
 	cat = atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=[mpd.num2date(mainshock['event_date_float']-1.0), to_dt], fout=None, rec_array=True)
@@ -243,11 +260,13 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#return aftershock_cat
 	return primary_cat
 	#return atp.catfromANSS(lon=lons, lat=lats, minMag=mainshock['mag']-dm_cat, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=False)
-	
-	#return biggest_earthquake
 #
 def moment_figure():
-	c1 = etas_auto(**mod_kwargs(sichuan_prams, doplot=False))
+	'''
+	# this is a sort of toy script designed to produce a figure of moment release as a function of time; the 2008 Wenschuan (Sischuan) earthquake is used
+	# as an example.
+	'''
+	c1 = etas_auto(**mod_kwargs(sischuan_prams, doplot=False))
 	M = lambda x: 10.**(1.0*x)
 	#
 	M_cum = [M(c1['mag'][0])]
@@ -266,6 +285,15 @@ def moment_figure():
 	ax2=ax.twinx()
 	ax2.set_yscale('linear')
 	ax2.plot([x.tolist() for x in c1['event_date']], M_cum, '.-', lw=2.5)
+#
+# =========================================================================
+# =========================================================================
+# Some technical bits and helper scripts.
+#
+def mod_kwargs(prams_dict, **kwargs):
+	r_dict = prams_dict.copy()
+	r_dict.update(kwargs)
+	return r_dict
 #
 def Lr(m, fact=.5, d_lambda=1.76):
 	return fact*10.**(.5*m - d_lambda)

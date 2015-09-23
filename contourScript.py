@@ -1,5 +1,14 @@
 #!/usr/bin/python
-
+#
+# contourScript.py:
+# Primary Author: Mark R. Yoder, Ph.D.
+#                 mryoder@ucdavis.edu
+#                 mark.yoder@gmail.com
+#
+# this is an example script for transforming pyplot.contourf() contours to KML contours. see also my contours2kml repository:
+# https://github.com/markyoder/contours2kml
+#
+#
 import numpy
 
 import matplotlib
