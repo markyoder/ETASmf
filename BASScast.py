@@ -1,3 +1,15 @@
+#!/usr/bin/python
+#
+# ETASscripts.py:
+#
+# Primary Author: Mark R. Yoder, Ph.D.
+#                 mryoder@ucdavis.edu
+#                 mark.yoder@gmail.com
+#
+# the guts of ETAS forecasting v1.0. unfortunately, this is very much a development grade code. long story, but the original plan did not work, so what started as a
+# relatively well conceived code architecture ended up being a reserach grade catastrophy. this code is pretty easy to use (see ETASscripts.py) for tons of examples
+# and helper scripts
+
 import datetime as dtm
 import pytz
 import operator
@@ -346,6 +358,7 @@ class BASScast(object):
 			bcast=self.calcBASScast()
 			#self.conts = self.getContourSet(X_i=self.X_i, Y_i=self.Y_i, Z_ij=self.Z2d.round(self.zresolution), contres=self.contfact*self.contres)
 			#self.conts = self.getContourSet(X_i=bcast[0], Y_i=bcast[1], Z_ij=bcast[2].round(4), contres=self.contfact*self.contres)
+			#print "contres: ", self.contres, self.contfact
 			self.conts = self.getContourSet(X_i=bcast[0], Y_i=bcast[1], Z_ij=bcast[2], contres=self.contfact*self.contres)
 		#
 		# initialize a basemap:
@@ -628,6 +641,7 @@ class BASScast(object):
 			except:
 				# do nothing...
 				LevelsNumber = resolution
+		print "doing BASScast with LevelsNumber: ", LevelsNumber
 		#
 		# cnts=plt.contourf(gridsize*numpy.array(range(nelements)), gridsize*numpy.array(range(nelements)), Z2d,10)
 		# retrieve the collections() object from the contourf() function which returns a matplotlib.contour.ContourSet
