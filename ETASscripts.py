@@ -149,7 +149,7 @@ def pfmovie(dtstart=dtm.datetime(2002,1,1, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC
 	#os.system('pfmovie$ mencoder mf://*.jpg -mf w=800:h=600:fps=5:type=jpg -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o pfmovie.avi')
 
 #
-def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_factor=4.0, mc=2.5, mc_0=None, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, doplot=False, kmldir='kml_auto', **kwargs):
+def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10, Lr_factor=4.0, mc=2.5, mc_0=4.5, gridsize=.1, to_dt=None, fnameroot='etas_auto', catlen=5.0*365.0, doplot=False, kmldir='kml_auto', **kwargs):
 	'''
 	# this is probably a major staple of future work in ETAS; when in doubt, start here and point it at a big earthquake.
 	#
@@ -160,7 +160,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#
 	#if to_dt == None: to_dt = dtm.datetime.now(pytz.timezone('UTC'))
 	to_dt = (to_dt or dtm.datetime.now(pytz.timezone('UTC')))
-	mc_0  = (mc_0 or None)
+	mc_0  = (mc_0 or mc)
 	#
 	if lon_center==None and lat_center==None:
 		# let's look for any large earthquake in the world. assume for this, mc
