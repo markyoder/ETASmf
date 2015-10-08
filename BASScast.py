@@ -68,6 +68,10 @@ class BASScast(object):
 							# n -> n0*10^(mc-rateMag.)
 	mapres='i'		# basemap map resolution.
 	#
+	# note: we did this __init__ <--> initialize() based on some older programming models. but this is no longer necessary and mostly a big pain in the butt,
+	# so .initialize() should be removed and __init__() used directly. cases where we have to call a base-class.initialize() can use super() or another
+	# method of calling a base class. it looks like all the calls to .initialize() are in self.__init__() calls and to self.initialize(), so this should be pretty easy.
+	#
 	def __init__(self, incat=[], fcdate=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, contres=2, mc=2.0, eqtheta=None, eqeps=None, fitfactor=5.0, contour_intervals=None, lats=None, lons=None, doBASScast=True, rtype='ssim', p_quakes=None, p_map=None, map_projection='cyl'):
 		return self.initialize(incat=incat, fcdate=fcdate, gridsize=gridsize, contres=contres, mc=mc, eqtheta=eqtheta, eqeps=eqeps, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, doBASScast=doBASScast, rtype=rtype, p_quakes=p_quakes, p_map=p_map, map_projection=map_projection)
 		#
@@ -1874,8 +1878,9 @@ class earthquake(locbase):
 		self.mag=float(mag)
 		self.loc=loc
 		self.alpha=alpha
-		for i in xrange(len(self.loc)):
-			self.loc[i]=float(self.loc[i])
+		#for i in xrange(len(self.loc)):
+		#	self.loc[i]=float(self.loc[i])
+		self.loc = [float(x) for x in self.loc]
 		#
 		self.mc=float(mc)
 		self.eqtheta=eqtheta
@@ -2073,6 +2078,7 @@ class earthquake(locbase):
 	def localIntensity(self, inloc, intime, rho=None, coordtype='rad', thetaconv=0, abratio=1.0, eqtheta=None, eqeps=None, rtype=None):
 		#
 		# self-similar formulation.
+		# ... and i believe intime should be a float. we'll calculate t=intime-t_event
 		#
 		# some hard-code valuse for now:
 		#
@@ -2249,9 +2255,6 @@ class earthquake(locbase):
 			#radialDens = (r0/(r0+r))**q	#where did this come from? to be fair, it does make a nice picture.
 			#i think the correct formulation is:
 			#
-			#radialDens = (q-1.0)*(r0**(q-1.0))/((r0+rprime)**q)
-			
-			#radialDens = (q-1.0)*(r0ssim**(q-1.0))*(r0ssim + rprime)**(-q)
 			radialDens = (q-1.0)*(r0ssim**(q-1.0))*(r0ssim + rprime)**(-q)
 		if rtype=='ssim_exp':
 			# and omori * exp type density. use L_r or L_r/2 for the exponential cut-off.
@@ -2431,7 +2434,12 @@ class earthquake(locbase):
 		#if r==0.0: return 0.0
 		if rprime==0.0: return 0.0
 		#
-		spatialdensity = radialDens/(2.0*math.pi*rprime)
+		spatialdensity = radialDens/(2.0*math.pi*rprime)	# this should be checked. should this be x/(2.*math.pi*r) ?? aka, a non-transformed r... or is that what rprime is?
+		#													# ... and i think it should be. this causes the radial density to decay faster than (maybe) it should (aka, as if
+		#													# events are distributed over a circle with radius=rprime, not radius=r .
+		#                                                   # note, however, that 1) i don't think we've preserved r vs r' very well (if at all), 2) the error is small for
+		#                                                   #  standard a/b=2 (=sqrt(2)?) usage, and 3) maybe it's more correct... nominally, what we should be doing is 
+		#                                                   # distributing over the elliptical contour, x/
 		#
 		#localIntensity = orate*spatialDecayFactor
 		localIntensity = spatialdensity*orate
