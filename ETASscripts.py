@@ -196,7 +196,8 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#my_kwargs = {}
 	etas = make_etas_fcfiles(root_prams=root_prams, **kwargs)
 	plt.figure(1)
-	plt.title('ETAS to: %s' % str(todt if todt!=None else dtm.datetime.now(pytz.timezone('UTC'))))
+	plt.title('ETAS to: %s' % str(to_dt if to_dt!=None else dtm.datetime.now(pytz.timezone('UTC'))))
+	plt.savefig(os.path.join(kml_dir, fname_root+'.png'))
 	#
 	#return biggest_earthquake
 	return etas
