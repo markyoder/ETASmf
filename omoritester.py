@@ -123,11 +123,11 @@ def tautest(m, mc, p=1.08, doclf=True, linestyle='-', lw=1, ltend=35):
 	total=0.0
 	prats=[]
 	pset=[]
-	for i in xrange(1, len(ts)):
+	for i in range(1, len(ts)):
 		total+=(ts[i]-ts[i-1])*dNs2[i]
 		#total+=( ((t0+ts[i])**(1.0-p)) - ((t0+ts[i-1])**(1.0-p)))/(tau*(1.0-p))
 		
-	print "total %f: %f/%f: %f [%f, %f]" % (p, total, Nom(m,mc), float(total)/Nom(m,mc), t0, tau)
+	print("total %f: %f/%f: %f [%f, %f]" % (p, total, Nom(m,mc), float(total)/Nom(m,mc), t0, tau))
 	#
 	#
 	plt.figure(1)
@@ -183,7 +183,7 @@ def fractRecovery1(frac=.5, m=6.0, mc=1.5, ps=[1.01, 2.5, .01], b=1.0, dmstar=1.
 	#
 	mint=ts[0]
 	minindex=0
-	for j in xrange(len(ts)):
+	for j in range(len(ts)):
 		if ts[j]<mint:
 			mint=ts[j]
 			minindex=j

@@ -15,10 +15,9 @@ import os
 import glob
 import multiprocessing as mcp
 #
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.dates as mpd
-import matplotlib.mpl as mpl
 import scipy.optimize as spo
 #
 from mpl_toolkits.basemap import Basemap as Basemap
@@ -158,7 +157,7 @@ def MComoriFit(X, Y, A0=None, x0=None, p0=None, nits=10*5):
 	plt.figure(7)
 	plt.clf()
 	plt.ion()
-	for i in xrange(nits):
+	for i in range(nits):
 		# do a mc fit...
 		#dummyvar=0.0
 		p=1.25 + .75*R1.random()
@@ -172,7 +171,7 @@ def MComoriFit(X, Y, A0=None, x0=None, p0=None, nits=10*5):
 		Ytest = fomorilike(Xprime, 10**ltau, 10**lx0, p)
 		thiserr = 0.
 		NerrCount=0
-		for i in xrange(len(Y)):
+		for i in range(len(Y)):
 			#print Y[i], Ytest[i]
 			if Y[i]<=0 or Ytest[i]<=0:
 				thiserr += 0
@@ -184,7 +183,7 @@ def MComoriFit(X, Y, A0=None, x0=None, p0=None, nits=10*5):
 		if minerr==None or thiserr<minerr:
 			minerr = thiserr
 			minprams=[ltau, lx0, p]
-			print minerr, minprams
+			print(minerr, minprams)
 			#plt.loglog(X, fomorilike(X, 10.0**minprams[0], 10.0**minprams[1], minprams[2]), '-') 
 		#
 	plt.figure(7)
@@ -200,12 +199,14 @@ def MComoriFit(X, Y, A0=None, x0=None, p0=None, nits=10*5):
 	#Y2 = fomorilike(10**2.16, X, .99, 1.1)
 	#plt.loglog(X, Y2, '.-.')
 	#
-	print minprams
-	print "lt0: %f, ltau: %f, p: %f" % (minprams[1], minprams[0], minprams[2])
+	print(minprams)
+	print("lt0: %f, ltau: %f, p: %f" % (minprams[1], minprams[0], minprams[2]))
 	#
 	return minprams
 #
-def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, skipexp=3.0, lw=2, mev=None, Nfact=1.0, fnum=1, titlename='distances', mt=7.6, len0=None, catnum=0, ralpha=.5, rbeta=0.0, K1=3., K2=.1, K3=1.0):
+def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, skipexp=3.0, lw=2, mev=None, Nfact=1.0, fnum=1, titlename='distances', mt=7.6, len0=None, catnum=0):
+	# ralpha=.5, rbeta=0.0, K1=3., K2=.1, K3=1.0
+	
 	#
 	# this is an experimental eqDists version, consistent with present write-up (Dec. 2012).
 	# default cat for dev:
@@ -215,13 +216,10 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	#	mc=3.0
 	#
 	# note: dmstar=1.0 gives full sequence type behavior
-	#       dmstar=1.2 gives "one earthquake" behaviro (aka, sum(all events with dmstar=1.2) -> dmstar=1.0
+	#       dmstar=1.2 gives "one earthquake" behavior (aka, sum(all events with dmstar=1.2) -> dmstar=1.0
 	#if alpha0==None: alpha0=alpha_0
 	#alpha=alpha0
 	#b=1.0
-	ralpha=0.5
-	rbeta = 0.0
-	print "forcing ralpha, rbeta: %f, %f" % (ralpha, rbeta)
 	#
 	cpf=cat # catalog object
 	if type(cpf).__name__ == 'list':
@@ -235,7 +233,7 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	if mstar==None:
 		# assume largest mag in catalog:
 		mstar=cpf.getMainEvent(cpf.getcat(catnum))[3]
-		print "mstar chosen: ", mstar
+		print("mstar chosen: ", mstar)
 	#
 	lNom =  b*(mstar - 1.0 - mc)
 	Nom = 10**lNom
@@ -265,7 +263,7 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	#skipIntervals=int(10**(mstar-mc-skipexp))
 	skipIntervals=int(10**(mstar-mc-skipexp))
 	#
-	Rs=map(operator.itemgetter(6), distances)
+	Rs=list(map(operator.itemgetter(6), distances))
 	Rskip = Rs[skipIntervals:]
 	Rs.sort()	# now, in distance-order
 	Rskip.sort()
@@ -284,7 +282,7 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	RdR =  []
 	Nrdr = []
 	#
-	Ns=range(1, len0+1)
+	Ns=list(range(1, len0+1))
 	
 	Nactual=[]
 	Ntheory=[]
@@ -292,7 +290,6 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	NTPL=[]
 	NPLexp=[]
 	#
-	#lr0 = mstar*ralpha + mc*rbeta - C1
 	lr0 = mstar/2.0 - C1
 	lr2 = mstar/2.0 - C2
 	if mstar>mt:
@@ -323,10 +320,10 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	
 	#Atpl = (Nom/(r02**(-q) - rtrunc**(-q)))
 	lr0tpl = q*(mstar/2.0 - C2 + .5)
-	Atpl = (Nom*(10**lr0tpl)) - rtrunc**(-q)
-	Aexp = Nom*(10**lr0tpl)*math.exp(r02/rtrunc)
+	Atpl = (Nom*(10**lr0tpl)) - rtrunc**(-q)       # truncated power law
+	Aexp = Nom*(10**lr0tpl)*math.exp(r02/rtrunc)   # exponential funct.
 	rs=[0.]
-	print "mstar=%.2f, Lr=%f, r0=%f, r2=%f, chi=%f, chi2=%f, Ngr=%f:" % (mstar, 10**(mstar/2.0-2.77), r0, r02, chi, chi2, 10**lNom)
+	print("mstar=%.2f, Lr=%f, r0=%f, r2=%f, chi=%f, chi2=%f, Ngr=%f:" % (mstar, 10**(mstar/2.0-2.77), r0, r02, chi, chi2, 10**lNom))
 	#
 	#
 	Ntheory=[]
@@ -403,10 +400,11 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	Ntheory=scipy.array(Ntheory)
 	Ntheory2 = scipy.array(Ntheory2)
 	#
-	plfunct(Rs, range(1, len(Rs)+1)[::-1], 'r.', label='nActual r', lw=lw, zorder=4)
+	# note sorting syntax: X[::-1] --> " by negative 1's", so sort backwards. every-other backwards is X[::-2].
+	plfunct(Rs, list(range(1, len(Rs)+1))[::-1], 'r.', label='nActual r', lw=lw, zorder=4)
 	plfunct(RsTheory + r0, Ntheory, 'r-.', label='theory', alpha=.7, lw=2*lw, zorder=3)
 
-	plfunct(R3D, range(1, len(R3D)+1)[::-1], 'g.', label='nAct3D, r',lw=lw, zorder=4)
+	plfunct(R3D, list(range(1, len(R3D)+1))[::-1], 'g.', label='nAct3D, r',lw=lw, zorder=4)
 	plfunct(RsTheory + r02, Ntheory2, 'g-.', label='theory2, r', alpha=.7, lw=2*lw, zorder=3)
 	
 	#plfunct((Rs + R3D)/2.0,range(1, len(R3D)+1)[::-1], 'c--')
@@ -428,11 +426,11 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	# transposed:
 	plt.figure(2)
 	plt.clf()
-	print "nths:", Ntheory[0:3], Ntheory2[0:3]
-	plfunct(Rs, range(1, len(Rs)+1), 'r.-.', label='nActual r', lw=lw, zorder=4)
+	print("nths:", Ntheory[0:3], Ntheory2[0:3])
+	plfunct(Rs, list(range(1, len(Rs)+1)), 'r.-.', label='nActual r', lw=lw, zorder=4)
 	plfunct(RsTheory + r0, Nom -Ntheory/Nfact, 'r-.', label='theory', alpha=.7, lw=2*lw, zorder=3)
 
-	plfunct(R3D, range(1, len(R3D)+1), 'g.-.', label='nAct3D, r',lw=lw, zorder=4)
+	plfunct(R3D, list(range(1, len(R3D)+1)), 'g.-.', label='nAct3D, r',lw=lw, zorder=4)
 	plfunct(RsTheory + r02, -((Ntheory2/Nfact)-Nfact*Nom), 'g-.', label='theory2, r', alpha=.7, lw=2*lw, zorder=3)
 	#
 	return distances
@@ -473,7 +471,7 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 		maxdate=c1.getcat(catnum)[0][0]+dtm.timedelta(days=maxdt)
 		#print maxdate, c1.cat[0][0]
 		while c1.getcat(catnum)[-1][0]>(maxdate): c1.getcat(catnum).pop()
-		print "end-date: ", c1.getcat(catnum)[-1][0]
+		print("end-date: ", c1.getcat(catnum)[-1][0])
 		#
 	#
 	D1 = eqdistances(c1=c1, mc=mc, mev=mev, catnum=catnum)
@@ -493,12 +491,12 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	# first, plot the actual distances. then, we'll compare to ETAS models.
 	#
 	# d1 is like [T, x, y, R0, R1, R2, R3], where R_i are in order of reliability.
-	T=map(operator.itemgetter(0), d1)
+	T=list(map(operator.itemgetter(0), d1))
 	Tf = mpd.date2num(scipy.array(T))	# float-times, to evaluate scaling time.
 	Tf=Tf-Tf[0]
 	# full spherical expression:
-	R=map(operator.itemgetter(6), d1)	# dist-type R3
-	Ns=range(1, len0+1)
+	R=list(map(operator.itemgetter(6), d1))	# dist-type R3
+	Ns=list(range(1, len0+1))
 	Ns.reverse()
 	thisR=R[:]
 	thisR.sort()
@@ -509,10 +507,10 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 		R3D += [math.sqrt(rw[3]*rw[3] + rw[8]*rw[8])]	# rw[3]-rw[7] are distances; rw[8] is depth.
 	R3D.sort()
 	#
-	R0 = map(operator.itemgetter(3), d1)
+	R0 = list(map(operator.itemgetter(3), d1))
 	R0.sort()
 	# geographic-lib distances:
-	Rgl = map(operator.itemgetter(7), d1)
+	Rgl = list(map(operator.itemgetter(7), d1))
 	Rgl.sort()
 	#
 	Nth = []
@@ -525,7 +523,7 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	dmstar=1.0
 	lNom=(b*(mstar-dmstar-mc))
 	Nom = 10**lNom
-	print "C1: ", C1
+	print("C1: ", C1)
 	lr0 = mstar/2.0 - C1
 	lchi = (1.0-q)*lr0 - lNom - math.log10(q-1.0) - C2
 	r0 = 10**lr0
@@ -548,8 +546,8 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	#plt.clf()
 	#
 	c1.plotCatMap(catalog=c1.cat[-len0:], fignum=0)
-	X=map(operator.itemgetter(1), d1)
-	Y=map(operator.itemgetter(2), d1)
+	X=list(map(operator.itemgetter(1), d1))
+	Y=list(map(operator.itemgetter(2), d1))
 	plt.figure(1)
 	plt.clf()
 	plt.plot(X,Y, '.')
@@ -630,7 +628,7 @@ def pfintervals(catname='cats/parkfield-mfetas.cat', dorefresh=True, mc=1.5, mst
 	#cpf.addEllipCat('PFshock (.4 x .15)', cpf.cat, 40.0, 35.9, -120.5, 0.8, 0.3)
 	#useCatnum=1
 	mev=cpf.getMainEvent(cpf.getcat(useCatnum))
-	print mev
+	print(mev)
 	while cpf.getcat(useCatnum)[0][0]<=mev[0]: cpf.getcat(useCatnum).pop(0)
 	mstar=6.0
 	
@@ -649,7 +647,7 @@ def hmineintervals(catname='cats/hmine-mfetas.cat', dorefresh=True, mc=3.0, msta
 	# #lon=[-117.25, -115.5]	lat=[33.5, 35.5]	m0=3.000000	dates=[datetime.datetime(1980, 1, 1, 0, 0), datetime.date(2011, 5, 12)]
 	
 	if dorefresh==True:
-		print "getting catalog"
+		print("getting catalog")
 		hmcat = bcp.atp.catfromANSS(lon=[-117.25, -115.5], lat=[33.5, 35.5], minMag=mc, dates0=[dtm.datetime(1980, 1,1, tzinfo=pytz.timezone('UCT')), dtm.datetime(2009,12,31, 0, 0, 0, 0, tzinfo=pytz.timezone('UTC'))], Nmax=999999, fout=catname)
 		cpf=ypp.eqcatalog(hmcat)
 	else:
@@ -667,7 +665,7 @@ def hmineintervals(catname='cats/hmine-mfetas.cat', dorefresh=True, mc=3.0, msta
 	cpf.addEllipCat('shock (.65 x .2)', cpf.cat, 67.4, 34.594, -116.271, 0.65, 0.2)
 	mev=cpf.getMainEvent(cpf.getcat(useCatnum))
 	#	
-	print mev
+	print(mev)
 	#mstar=7.1	# hmine is 7.1 according to ANSS; we might check with USGS source.
 	#
 	#myt0=10.0**(lDeltat(m=mstar, alpha=alpha0))
@@ -704,7 +702,7 @@ def elmayorCat(catname='cats/elmayor-mfetas.cat', dorefresh=True, mc=None):
 	thiscatnum=0
 	mev=cpf.getMainEvent(cpf.getcat(thiscatnum))
 	#	
-	print mev
+	print(mev)
 	mstar=mev[3] #7.1
 	#
 	return cpf
@@ -717,7 +715,7 @@ def sansimintervals(catname='cats/sansim-mfetas.cat', dorefresh=True, mc=3.0, ms
 	thiscatnum=0
 	mev=cpf.getMainEvent(cpf.getcat(thiscatnum))
 	#	
-	print mev
+	print(mev)
 	if mstar==None: mstar=mev[3] # 6.5
 	#
 	return calcEqints(cat=cpf, mstar=mstar, mc=mc, C1=C1, C2=C2, p=p, skipexp=skipexp,lw=lw, ralpha=ralpha, rbeta=rbeta, fitFract=fitFract)
@@ -749,7 +747,7 @@ def coalingaintervals(catname='cats/coalinga-mfetas.cat', dorefresh=True, mc=3.5
 	thiscatnum=0
 	mev=cpf.getMainEvent(cpf.getcat(thiscatnum))
 	#	
-	print mev
+	print(mev)
 	if mstar==None: mstar=mev[3] # 6.5
 	#
 	return calcEqints(cat=cpf, mstar=mstar, mc=mc, C1=C1, C2=C2, p=p, skipexp=skipexp,lw=lw, ralpha=ralpha, rbeta=rbeta, fitFract=fitFract)
@@ -802,7 +800,7 @@ def tohokuintervals(catname='cats/tohoku-mfetas.cat', dorefresh=True, mc=4.5, ms
 	#
 	mev=cpf.getMainEvent(cpf.getcat(useCatnum))
 	#	
-	print "mainshock: ", mev, len(cpf.getcat(useCatnum))
+	print(("mainshock: ", mev, len(cpf.getcat(useCatnum))))
 	mstar=9.0	# hmine is 7.1 according to ANSS; we might check with USGS source.
 	#
 	effmstar=None
@@ -825,15 +823,14 @@ def resAlphaOmori(p, y, x, mstar, mc, pq=1.2, w=1.0, alpha=None, beta=None, gamm
 	# fomorilike(X, tau, x0, p)
 	#errs = (y-fomorilike(x, tau, t0, pq))*w
 	errs=[]
-	for i in xrange(len(x)):
+	for i in range(len(x)):
 		ymodel = fomorilike(x[i], tau, t0, pq)
 		if ymodel==0.0 or y[i]==0.0: continue
-		#print ymodel, y[i]
-		#print math.log10(ymodel), math.log10(y[i])
+		#
 		errs+=[math.log10(float(y[i])/ymodel)]	
 	errs=scipy.array(errs)**2.0
 	#
-	#print "ressing...", len(errs), sum(errs**2.0), sum(errs)
+	#print("ressing...", len(errs), sum(errs**2.0), sum(errs))
 	return errs
 
 #
@@ -880,9 +877,9 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	if mstar==None:
 		# assume largest mag in catalog:
 		mstar=cpf.getMainEvent(cpf.getcat(catnum))[3]
-		print "mstar chosen: ", mstar
+		print(("mstar chosen: ", mstar))
 	#
-	print "catrange: ", cpf.cat[0][0], cpf.cat[-1][0]
+	print(("catrange: ", cpf.cat[0][0], cpf.cat[-1][0]))
 	#
 	cpf.plotGRdist(fignum=0, doShow=True, fname=None)
 	eqints=cpf.getIntervals(catList=cpf.getcat(catnum), winLen=1)	# intervals are in days, right?
@@ -954,7 +951,7 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	if fitlen<0:
 		plsq = fitInts(X=scipy.array(ts)[fitlen:], Y=scipy.array(Nactual[fitlen:]), prams0=[ralpha, rbeta, C1], mstar=mstar, mc=mc, p=p, alpha=ralpha, beta=rbeta, gamma=None)
 	#
-	print "plsq: ", plsq, mc, mstar
+	print("plsq: ", plsq, mc, mstar)
 	lt0fit = plsq[0][0]*mstar + plsq[0][1]*mc + plsq[0][2]
 	ltaufit = (1.-p)*lt0fit - math.log10(p-1.) - 1.0*(mstar - 1.0 - mc)
 	t0fit = 10**lt0fit
@@ -1011,7 +1008,7 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	
 	#
 	Nom=10**(1.0*(mstar-1.0-mc))
-	print "Ns: Ngr=%f, Nth=%f, Nmax=%d, Rth=%f, Rmax=%f" % (Nom, Ntheory[-1], Nactual[-1], Ntheory[-1]/Nom, Nactual[-1]/Nom)
+	print("Ns: Ngr=%f, Nth=%f, Nmax=%d, Rth=%f, Rmax=%f" % (Nom, Ntheory[-1], Nactual[-1], Ntheory[-1]/Nom, Nactual[-1]/Nom))
 	plt.figure(fnum)
 	plt.clf()
 	plt.loglog(ts, Nactual, '-.', label='nActual', lw=lw, zorder=4)
@@ -1041,7 +1038,7 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	#for t in ts:
 	avlen=1
 	#print "ts:", ts[0:10], ts[-10:]
-	for i in xrange(avlen,len(ts)):
+	for i in range(avlen,len(ts)):
 		#if t<=0: continue
 		#lts+=[math.log10(t)]
 		#dts+=[(abs(ts[i]-ts[i-avlen]))/float(avlen)]
@@ -1070,8 +1067,8 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	
 	#print "mean Initial Interval: %f/%f" % (sum(dts[:t0len])/float(t0len), math.log10(sum(dts[:t0len])/float(t0len)))
 	lmean=sum(map(math.log10, dts[:t0len]))/float(t0len)
-	lsdev= scipy.array(map(math.log10, dts[:t0len])).std()
-	print "mean log-Initial Interval: %f/%f, %f (%.2f, %.2f)" % (10**(lmean),lmean, lsdev, mstar, mc )
+	lsdev= scipy.array(list(map(math.log10, dts[:t0len]))).std()
+	print("mean log-Initial Interval: %f/%f, %f (%.2f, %.2f)" % (10**(lmean),lmean, lsdev, mstar, mc ))
 	
 	#
 	plt.figure(4)
@@ -1124,7 +1121,7 @@ def intervalFitFig(flist=None, fdir='data'):
 		# now, where is the b=0 intercept?
 		lf=lft.linefit([A[0], A[2]])
 		plsq=lf.doFit()[0]
-		print plsq
+		print(plsq)
 		bints += [plsq[0]]
 		bslopes += [plsq[1]]
 		#b0intercept = -plsq[0]/plsq[1]
@@ -1141,7 +1138,7 @@ def intervalFitFig(flist=None, fdir='data'):
 	lf2=lft.linefit([ms, beta0s])
 	plsq2=lf2.doFit()[0]
 	plt.plot([min(ms), max(ms)], [plsq2[0] + min(ms)*plsq2[1], plsq2[0] + max(ms)*plsq2[1]], lw=3)
-	for i in xrange(len(ms)):
+	for i in range(len(ms)):
 		plt.plot([ms[i]], [beta0s[i]], 'd', ms=10, label='$$m=%.2f$, \\beta_0 = %.2f$' % (ms[i], beta0s[i]))
 	meanm=numpy.mean(ms[:-2])
 	meanbeta0 = numpy.mean(beta0s[:-2])
@@ -1174,14 +1171,14 @@ def plotcalcfits(fname='data/pfbetafits.txt', fnum=0, mcfitmin=None, mcfitmax=No
 		if '#!dataname' in rw: plotname=rw.split()[1][:-1]
 		if rw[0]=='#': continue	# though eventually we'll want meta-data lines with #!
 		#
-		rws = map(float, rw.split())
+		rws = list(map(float, rw.split()))
 		mc, newbeta, C = rws[0], rws[1], rws[2]
 		if newbeta!=thisbeta:
 			# new plot-series.
 			
 			if len(X)!=0:
 				#
-				print "betas: %f, %f, %d" % (newbeta, thisbeta, len(X))
+				print("betas: %f, %f, %d" % (newbeta, thisbeta, len(X)))
 				lf=lft.linefit([X,Y])
 				fprams = lf.doFit(xmin=mcfitmin, xmax=mcfitmax)[0]
 				a=fprams[0]
@@ -1273,7 +1270,7 @@ def plotAlphaBetaData(fitset='parkfield', p=1.08, b=1.0, dm=1.0, alpha0=None, be
 		cpf.getcat(useCatnum).pop(0)
 	#
 	fmev=mpd.date2num(mev[0])
-	X = (scipy.array(map(mpd.date2num, map(operator.itemgetter(0), cpf.getcat(useCatnum)))) - fmev)*days2secs
+	X = (scipy.array(list(map(mpd.date2num, list(map(operator.itemgetter(0), cpf.getcat(useCatnum)))))) - fmev)*days2secs
 	Y = numpy.arange(1., len(X)+1)
 	#lY = map(math.log10, Y)
 	ty = []
@@ -1308,10 +1305,10 @@ def showbrutefits():
 		f=open(fl)
 		for rw in f:
 			thisrw=rw
-		print fl + ": " + rw
+		print(fl + ": " + rw)
 		f.close()
 		#
-		rws=map(float, rw.split())
+		rws=list(map(float, rw.split()))
 		if 'alpha' in setname:
 			alphas2+=[rws[0]]
 			betas2 +=[rws[1]]
@@ -1357,7 +1354,7 @@ def brutefitAlphaBetaGamma(fitset='parkfield', nits=10**6, p=1.08, b=1.0, dm=1.0
 	if beta0!=None: fnamestr=fnamestr+'beta0'
 	if gamma0!=None: fnamestr=fnamestr+'gamma0'
 	foutname='data/brute/%s%s.dat' % (fitset, fnamestr)
-	if debug: print "fout: %s" % foutname
+	if debug: print("fout: %s" % foutname)
 	#print "select data set."
 	#
 	if writefile==True:
@@ -1379,7 +1376,7 @@ def brutefitAlphaBetaGamma(fitset='parkfield', nits=10**6, p=1.08, b=1.0, dm=1.0
 	minprams=[0., 0., 0.]
 	i=0
 	while nits==None or i<(nits):
-	#for i in xrange(nits):
+	#for i in range(nits):
 		if nits!=None: i+=1
 		#
 		thisalpha=alpha0
@@ -1393,7 +1390,7 @@ def brutefitAlphaBetaGamma(fitset='parkfield', nits=10**6, p=1.08, b=1.0, dm=1.0
 		#print "nits: ", i
 		err=0
 		jcount=0
-		for j in xrange(len(Y)):
+		for j in range(len(Y)):
 			t=X[j]
 			thisN=logNOmoriScaling(mstar, mc, t, p=p, alpha=thisalpha, beta=thisbeta, gamma=thisgamma, dm=dm, b=b)
 			if thisN==None: continue
@@ -1408,26 +1405,26 @@ def brutefitAlphaBetaGamma(fitset='parkfield', nits=10**6, p=1.08, b=1.0, dm=1.0
 		err/=float(jcount)
 		if err<minerr:
 			minprams=[thisalpha, thisbeta, thisgamma]
-			if debug: print "new min err: %f, %f, %s" % (minerr, err, str(minprams))
+			if debug: print("new min err: %f, %f, %s" % (minerr, err, str(minprams)))
 			if writefile==True:
 				fout=open(foutname, 'a')
 				fout.write('%f\t%f\t%f\t%f\n' % (minprams[0], minprams[1], minprams[2], err) )
 				fout.close()
 			#
 			minerr=err
-	print "minerr: ", minerr, minprams, fitset
+	print("minerr: ", minerr, minprams, fitset)
 	#
 	newNs = []
 	for x in X:
-		print newNs[-1], logNOmoriScaling(mstar, mc, x, p=p, alpha=minprams[0], beta=minprams[1], gamma=minprams[2], dm=dm, b=b)	
+		print(newNs[-1], logNOmoriScaling(mstar, mc, x, p=p, alpha=minprams[0], beta=minprams[1], gamma=minprams[2], dm=dm, b=b))	
 		newNs += [10**logNOmoriScaling(mstar, mc, x, p=p, alpha=minprams[0], beta=minprams[1], gamma=minprams[2], dm=dm, b=b)]
 	if debug: plt.plot(X, newNs, '-', lw=2)
-	print "return X,Y,newNs.", len(X), len(Y), len(newNs)
+	print("return X,Y,newNs.", len(X), len(Y), len(newNs))
 	return [X, Y, newNs]
 #
 #
 def mpbrutes():
-	print "execute a set of MC fits as MP processes."
+	print("execute a set of MC fits as MP processes.")
 	#
 	mcps=[]
 	mcsets=['parkfield', 'elmayor', 'sansim', 'coalinga', 'tohoku', 'hmine']
@@ -1439,7 +1436,7 @@ def mpbrutes():
 		#
 	#
 	for pr in mcps:
-		print "starting process"
+		print("starting process")
 		pr.start()
 		pr.join
 	#
@@ -1459,7 +1456,7 @@ def calcfitAlphas(rootdir='data', fitfract=1.0):
 	thisrbeta = -.5
 	for fprams in fitses:
 		thisalpha = fprams[2][0]
-		print fprams
+		print(fprams)
 		Cs=[]
 		#
 		fname=fprams[1]
@@ -1473,12 +1470,12 @@ def calcfitAlphas(rootdir='data', fitfract=1.0):
 		plt.ion()
 		#while thisbeta<=fprams[2][1]:
 		while thisalpha<=fprams[2][1]:
-			print "thisalpha: %f " % thisalpha
+			print("thisalpha: %f " % thisalpha)
 			plotX=[]
 			plotY=[]
 			thismc=fprams[3][0]
 			while thismc<(fprams[3][1]-.5):
-				print "thismc: %f" % thismc
+				print("thismc: %f" % thismc)
 				calcfunct=fprams[4]
 				#a=pfintervals(p=1.2, mc=thismc, C1=9.94, ralpha=thisralpha, rbeta=thisbeta)
 				a=calcfunct(p=1.2, mc=thismc, C1=9.94, ralpha=thisalpha, rbeta=thisrbeta, fitFract=fitfract)
@@ -1509,7 +1506,7 @@ def calcfit2(rootdir='data', fitfract=1.0):
 	thisralpha = -.5
 	for fprams in fitses:
 		thisbeta = fprams[2][0]
-		print fprams
+		print(fprams)
 		Cs=[]
 		#
 		fname=fprams[1]
@@ -1521,12 +1518,12 @@ def calcfit2(rootdir='data', fitfract=1.0):
 		plt.clf()
 		plt.ion()
 		while thisbeta<=fprams[2][1]:
-			print "thisbeta: %f " % thisbeta
+			print("thisbeta: %f " % thisbeta)
 			plotX=[]
 			plotY=[]
 			thismc=fprams[3][0]
 			while thismc<(fprams[3][1]-.5):
-				print "thismc: %f" % thismc
+				print("thismc: %f" % thismc)
 				calcfunct=fprams[4]
 				#a=pfintervals(p=1.2, mc=thismc, C1=9.94, ralpha=thisralpha, rbeta=thisbeta)
 				a=calcfunct(p=1.2, mc=thismc, C1=9.94, ralpha=thisralpha, rbeta=thisbeta, fitFract=fitfract)
@@ -1559,12 +1556,12 @@ def calcfit():
 	plt.clf()
 	plt.ion()
 	while thisbeta<=.25:
-		print "thisbeta: %f " % thisbeta
+		print("thisbeta: %f " % thisbeta)
 		plotX=[]
 		plotY=[]
 		thismc=1.5
 		while thismc<3.5:
-			print "thismc: %f" % thismc
+			print("thismc: %f" % thismc)
 			a=pfintervals(p=1.2, mc=thismc, C1=9.94, ralpha=-.5, rbeta=thisbeta)
 			plsq=a[1][0]
 			Cs+=[[thismc, thisbeta, plsq[2]]]
@@ -1593,12 +1590,12 @@ def calcfit():
 	thisbeta = -1.25
 	Cs=[]
 	while thisbeta<=.25:
-		print "thisbeta: %f " % thisbeta
+		print("thisbeta: %f " % thisbeta)
 		plotX=[]
 		plotY=[]
 		thismc=2.5
 		while thismc<5.0:
-			print "thismc: %f" % thismc
+			print("thismc: %f" % thismc)
 			a=elmayorintervals(p=1.2, mc=thismc, C1=9.94, ralpha=-.5, rbeta=thisbeta, dorefresh=False)
 			plsq=a[1][0]
 			Cs+=[[thismc, thisbeta, plsq[2]]]
@@ -1628,12 +1625,12 @@ def calcfit():
 	thisbeta = -1.25
 	Cs=[]
 	while thisbeta<=.25:
-		print "thisbeta: %f " % thisbeta
+		print("thisbeta: %f " % thisbeta)
 		plotX=[]
 		plotY=[]
 		thismc=3.0
 		while thismc<4.5:
-			print "thismc: %f" % thismc
+			print("thismc: %f" % thismc)
 			a=elmayorintervals(p=1.2, mc=thismc, C1=9.94, ralpha=-.5, rbeta=thisbeta, dorefresh=False)
 			plsq=a[1][0]
 			Cs+=[[thismc, thisbeta, plsq[2]]]
@@ -1663,12 +1660,12 @@ def calcfit():
 	thisbeta = -1.25
 	Cs=[]
 	while thisbeta<=.25:
-		print "thisbeta: %f " % thisbeta
+		print("thisbeta: %f " % thisbeta)
 		plotX=[]
 		plotY=[]
 		thismc=3.0
 		while thismc<4.5:
-			print "thismc: %f" % thismc
+			print("thismc: %f" % thismc)
 			a=elmayorintervals(p=1.2, mc=thismc, C1=9.94, ralpha=-.5, rbeta=thisbeta, dorefresh=False)
 			plsq=a[1][0]
 			Cs+=[[thismc, thisbeta, plsq[2]]]
@@ -1697,12 +1694,12 @@ def calcfit():
 	thisbeta = -1.25
 	Cs=[]
 	while thisbeta<=0.:
-		print "thisbeta: %f " % thisbeta
+		print("thisbeta: %f " % thisbeta)
 		plotX=[]
 		plotY=[]
 		thismc=4.5
 		while thismc<6.5:
-			print "thismc: %f" % thismc
+			print("thismc: %f" % thismc)
 			a=tohokuintervals(p=1.2, mc=thismc, C1=9.94, ralpha=-.5, rbeta=thisbeta, dorefresh=False)
 			plsq=a[1][0]
 			Cs+=[[thismc, thisbeta, plsq[2]]]
@@ -1817,12 +1814,12 @@ def plotBASScats(BASScat0=[[0, [0,0], 0, 0, 6.0]], mc=3.0, b=1.0, dmstar=1.2, B=
 	plt.figure(1)
 	plt.clf()
 	#
-	for i in xrange(nits):
+	for i in range(nits):
 		BASScat=[]
 		for rw in BASScat0:
 			BASScat+=[rw]
 		#
-		print "set %d at mc=%f" % (i, mc)
+		print("set %d at mc=%f" % (i, mc))
 		#a=getDetBranchingCat(BASScat=[[0, [0,0], 0, 0, 6.0]], mc=mc)
 		a=getBASS1(BASScat=BASScat, mc=mc, b=b, dmstar=dmstar, alpha0=alpha0, limMags=limMags)
 		b=BASScatPlots(BASScat=a, doCLF=(i==0))
@@ -1852,7 +1849,7 @@ class fcset(object):
 def BASS3demo():
 	cat0=[[0, [0,0], 0, 0, 0, 7.0]]
 	bcat=getBASS4(BASScat=cat0, mc=1.0, maxDeltaM=3.0, q=1.25)
-	mgs=map(operator.itemgetter(-1), bcat)
+	mgs=list(map(operator.itemgetter(-1), bcat))
 	mgs.sort()
 	
 	bcat.sort(key = lambda x: x[0])
@@ -1863,8 +1860,8 @@ def BASS3demo():
 	
 	#print intervals[0][0:5], intervals[0][-5:], intervals[1][0:5], intervals[1][-5:]
 	
-	Rs=map(operator.itemgetter(2), bcat)
-	Rs2=map(operator.itemgetter(3), bcat)
+	Rs=list(map(operator.itemgetter(2), bcat))
+	Rs2=list(map(operator.itemgetter(3), bcat))
 	Rs.sort()
 	Rs2.sort()
 	rs=[]
@@ -1874,7 +1871,7 @@ def BASS3demo():
 	for R in Rs2:
 		rs2+=[R**.5]
 	#	
-	ns=range(1, len(Rs)+1)
+	ns=list(range(1, len(Rs)+1))
 	ns.reverse()
 	#
 	plt.figure(0)
@@ -1904,7 +1901,7 @@ def BASS3demo():
 	plt.figure(4)
 	plt.clf()
 	plt.ion()
-	intNs=range(1, len(intervals[1])+1)
+	intNs=list(range(1, len(intervals[1])+1))
 	plt.semilogy(intNs, intervals[1], 'o', ms=2)
 	plt.xlabel('Natural time (event cout) $n$')
 	plt.ylabel('interval $\\Delta t$')
@@ -1968,7 +1965,7 @@ def getBASS4(BASScat=[[0, [0,0], 0, 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.2, alph
 		# make a list of magnitudes; remove randomness except for order
 		maglist=[]
 		#print "mstar, Nbass, log(Nbass): %f, %f, %f " % (mstar, Nbass, math.log10(Nbass))
-		for i in xrange(int(Nbass)):
+		for i in range(int(Nbass)):
 			#
 			#newm = randmagLim(mstar=(mstar-dmstar + maxDeltaM), mc=mc, b=b, localrand=mrand)
 			newm = invGR(N=i+1.0, mc=mc, dmstar=0.0, b=b)
@@ -1982,7 +1979,7 @@ def getBASS4(BASScat=[[0, [0,0], 0, 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.2, alph
 		#random.shuffle(maglist)
 		#
 		#print deltaN
-		for i in xrange(int(Nbass)):
+		for i in range(int(Nbass)):
 			Nsequence+=1
 			#thist = invOmori(i, mytau, p, myt0)
 			#newEvents+=[[parentTime + thist, [0,0], 0, i, thism]]
@@ -2045,7 +2042,7 @@ def getBASS3(BASScat=[[0, [0,0], 0, 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.2, alph
 		#
 		Nbass = 10**(b*(mstar - dmstar - mc))	# Nbass new "child" earthquakes
 		#print deltaN
-		for i in xrange(int(Nbass)):
+		for i in range(int(Nbass)):
 			Nsequence+=1
 			#thist = invOmori(i, mytau, p, myt0)
 			#newEvents+=[[parentTime + thist, [0,0], 0, i, thism]]
@@ -2109,7 +2106,7 @@ def getBASS1(BASScat=[[0, [0,0], 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.2, alpha0=
 		Nbass = 10**(b*(thism - dmstar - mc))	# Nbass new "child" earthquakes
 		deltaN=Nbass
 		#print "Nbass: ", Nbass
-		for i in xrange(int(Nbass)):
+		for i in range(int(Nbass)):
 			Nsequence+=1	# number of events (index of event) in a sequence.
 			#
 			# random magnutide between mc and mstar; does not permit foreshocks and mitigates foreshock
@@ -2125,7 +2122,7 @@ def getBASS1(BASScat=[[0, [0,0], 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.2, alpha0=
 			# and in the case of unlimited magnitudes, in case we get something too big that's going to make a big mess for us,
 			correctionindex=0
 			while thism>=3.0*mstar:
-				print "correcting for massive eq.,%d: %f/%f" % (correctionindex, thism, mstar) 
+				print("correcting for massive eq.,%d: %f/%f" % (correctionindex, thism, mstar)) 
 				thism = randmag(mc=mc, b=1.0, localrand=mrand)
 				correctionindex+=1
 				
@@ -2172,7 +2169,7 @@ def getDetBranchingCat(BASScat=[[0, [0,0], 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.
 	if type(BASScat).__name__ in ('float', 'int'):
 		BASScat=[[0, [0,0], 0, 0, BASScat]]
 	mrand=random.Random()
-	print "basscat len: %d" % (len(BASScat))
+	print("basscat len: %d" % (len(BASScat)))
 	#
 	# for this version, randomize only the magnitude order. there is a way to generalize the whole process from mean values
 	# but it appears to bn un-simple.
@@ -2229,7 +2226,7 @@ def getDetBranchingCat(BASScat=[[0, [0,0], 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.
 				thism=mc
 			#
 			N=int(Nfact*1.0*(B**bpower))
-			for i in xrange(N):
+			for i in range(N):
 				Nsequence+=1
 				#thist = invOmori(i, mytau, p, myt0)
 				#newEvents+=[[parentTime + thist, [0,0], 0, i, thism]]
@@ -2255,8 +2252,8 @@ def getDetBranchingCat(BASScat=[[0, [0,0], 0, 0, 5.0]], mc=3.0, b=1.0, dmstar=1.
 def BASScatPlots(BASScat=None, doCLF=True):
 	# some standard plots for a BASS catalog:
 	#
-	Ts = map(operator.itemgetter(0), BASScat)
-	Ms = map(operator.itemgetter(4), BASScat)
+	Ts = list(map(operator.itemgetter(0), BASScat))
+	Ms = list(map(operator.itemgetter(4), BASScat))
 	
 	# return [Ts, Ms]
 	#
@@ -2269,9 +2266,9 @@ def BASScatPlots(BASScat=None, doCLF=True):
 	plt.xlabel('time $t$')
 	#
 	
-	locs=map(operator.itemgetter(1), BASScat)
-	X=map(operator.itemgetter(0), locs)
-	Y=map(operator.itemgetter(1), locs)
+	locs=list(map(operator.itemgetter(1), BASScat))
+	X=list(map(operator.itemgetter(0), locs))
+	Y=list(map(operator.itemgetter(1), locs))
 	#
 	#if doplots:
 	plt.figure(1)
@@ -2283,11 +2280,11 @@ def BASScatPlots(BASScat=None, doCLF=True):
 	BASScat.sort(key=operator.itemgetter(0))
 	#
 	myints=getints(BASScat)
-	print len(myints[0]), len(BASScat)
+	print(len(myints[0]), len(BASScat))
 	# just get our own intervals:
 	#intsT=[BASScat[0][0]]
 	#intsInt=[0]
-	#for i in xrange(1, len(BASScat)):
+	#for i in range(1, len(BASScat)):
 	#	thisint=BASScat[i][0]-BASScat[i-1][0]
 	#	intsT+=[BASScat[i][0]]
 	#	print thisint, BASScat[i][0]
@@ -2304,8 +2301,8 @@ def BASScatPlots(BASScat=None, doCLF=True):
 	#
 	#if doplots:
 	# and a cumulative time distribution:
-	cdfT=map(operator.itemgetter(0), BASScat)
-	cdfN=range(1, len(cdfT)+1)
+	cdfT=list(map(operator.itemgetter(0), BASScat))
+	cdfN=list(range(1, len(cdfT)+1))
 	#
 	plt.figure(3)
 	if doCLF: plt.clf()
@@ -2338,12 +2335,12 @@ def plotBASSLocs2(BASScat=None, fignum=3, maxfact=100.0):
 	#if maxfact!=None:
 	#	maxr=maxfact*10.0**lruptLen(m, dl0=1.0)
 	
-	centers=map(operator.itemgetter(1), BASScat)
+	centers=list(map(operator.itemgetter(1), BASScat))
 	locs=[]
-	Rs = map(operator.itemgetter(3), BASScat)
-	Rs0 = map(operator.itemgetter(2), BASScat)
+	Rs = list(map(operator.itemgetter(3), BASScat))
+	Rs0 = list(map(operator.itemgetter(2), BASScat))
 	#
-	for i in xrange(len(Rs)):
+	for i in range(len(Rs)):
 		r2=Rs[i]**.5
 		r1=Rs0[i]**.5
 		
@@ -2354,8 +2351,8 @@ def plotBASSLocs2(BASScat=None, fignum=3, maxfact=100.0):
 		locs+=[[centers[i][0] + thisxy1[0] + thisxy2[0], centers[i][1] + thisxy1[1] + thisxy2[1]]]
 		#
 	#
-	X=map(operator.itemgetter(0), locs)
-	Y=map(operator.itemgetter(1), locs)
+	X=list(map(operator.itemgetter(0), locs))
+	Y=list(map(operator.itemgetter(1), locs))
 	#
 	#plt.clf()
 	plt.plot(X,Y, ',')
@@ -2370,9 +2367,9 @@ def plotBASSLocs(BASScat=None, fignum=0, maxfact=100.0):
 	#if maxfact!=None:
 	#	maxr=maxfact*10.0**lruptLen(m, dl0=1.0)
 	
-	locs=map(operator.itemgetter(1), BASScat)
-	X=map(operator.itemgetter(0), locs)
-	Y=map(operator.itemgetter(1), locs)
+	locs=list(map(operator.itemgetter(1), BASScat))
+	X=list(map(operator.itemgetter(0), locs))
+	Y=list(map(operator.itemgetter(1), locs))
 	#
 	#plt.clf()
 	plt.plot(X,Y, ',')
@@ -2383,7 +2380,7 @@ def getints(incat=None):
 	if incat==None:
 		incat=getDetBranchingCat()
 	theseints=[[],[]]
-	for i in xrange(1, len(incat)):
+	for i in range(1, len(incat)):
 		theseints[0]+=[incat[i][0]]
 		theseints[1]+=[incat[i][0]-incat[i-1][0]]
 	#
@@ -2478,11 +2475,11 @@ def checkrandmag(N=10000):
 	
 	localrand=mrand
 	#
-	for j in xrange(10):
+	for j in range(10):
 		Ms=[]
-		for i in xrange(N):
+		for i in range(N):
 			Ms+=[randmagLim(mstar, mc, b, localrand)]
-		Ns=range(1, len(Ms)+1)
+		Ns=list(range(1, len(Ms)+1))
 		Ms.sort()
 		Ns.reverse()
 		#
@@ -2580,7 +2577,7 @@ def forecastdemo3(gridsize=.1, contres=5, lons=[-121.0, -114.0], lats=[31.0, 37.
 		thiscat=ypp.eqcatalog()
 		thiscat.loadCatFromFile(fromfname)
 		clist1=[]
-		for i in xrange(len(thiscat.cat)):
+		for i in range(len(thiscat.cat)):
 			if thiscat.cat[i][0]<dt1 or thiscat.cat[i][3]<mc: continue
 			clist1+=[thiscat.cat[i]]
 			clist1[-1].insert(3,None)	# so some later stuff will work.
@@ -2588,7 +2585,7 @@ def forecastdemo3(gridsize=.1, contres=5, lons=[-121.0, -114.0], lats=[31.0, 37.
 		clist1=ypp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=[dt1, dt2], Nmax=999999, fout='tmpcat.cat')
 		#
 	#
-	print " catlen: %d" % len(clist1)
+	print(" catlen: %d" % len(clist1))
 	# [ [dtm, lat, lon, depth(?), mag, ...], ...]
 	catalog=[]
 	X,Y,M = [], [], []
@@ -2600,7 +2597,7 @@ def forecastdemo3(gridsize=.1, contres=5, lons=[-121.0, -114.0], lats=[31.0, 37.
 	#
 	mthresh=math.log10(Nquakes/maxNquakes) + mc	# we can take  out the "if" bc for N<Nmax, mthresh<mc
 																# (plot some max. number of earthquakes)
-	print "spinning clist1."
+	print("spinning clist1.")
 	for rw in clist1:	
 		thisdt=rw[0]
 		if type(thisdt) == type('abc'): thisdt = mpd.datestr2num(thisdt)
@@ -2614,12 +2611,12 @@ def forecastdemo3(gridsize=.1, contres=5, lons=[-121.0, -114.0], lats=[31.0, 37.
 		plt.plot([rw[2]], [rw[1]], 'o', ms=1*rw[4], alpha=.7, zorder=10)
 		#
 	#
-	print "getting basscast..."
+	print("getting basscast...")
 	#return catalog
 	bc3=bcp.BASScast(incat=catalog, gridsize=gridsize, contres=contres, mc=mc-2.0)
 	plt.figure(1)
 	plt.clf()
-	print "doing map..."
+	print("doing map...")
 	bc3.BASScastContourMap(fignum=1, X_i=bc3.X_i, Y_i=bc3.Y_i, Z2d=bc3.Z2d)
 	#plt.plot(X,Y, 'o', ms=5 )
 	kmstr1=bc3.KMLstrFromConts()
@@ -2759,7 +2756,7 @@ def arrayFromSet(cs):
 	dz= layers[0] - levels[0]
 	collects=cs.collections
 	carray = []
-	for i in xrange(0, len(collects)):
+	for i in range(0, len(collects)):
 		bgra_array = 255*collects[i].get_facecolor()[0]
 		strclr = '7d%02x%02x%02x' % ( bgra_array[2] , bgra_array[1] , bgra_array[0] )
 		#
@@ -2841,7 +2838,7 @@ def KMLstrFromConts(cset):
 def getTestQuakes(mc=2.0, floatnow=None):
 	quakes=[]
 	if floatnow==None: floatnow=mpd.date2num(dtm.datetime.now(pytz.timezone('UTC')))*days2secs
-	#for i in xrange(Neq):
+	#for i in range(Neq):
 	#	thismag=mc + 2.0 + 4.0*mrand.random()
 	#	quakes += [earthquake(mag=thismag, loc=[X*mrand.random(), Y*mrand.random()], evtime=1.0, mc=mc)]
 	#	#plt.plot([quakes[-1].loc[0]], [quakes[-1].loc[1]], 'o', ms=2*quakes[-1].mag)
@@ -2861,7 +2858,7 @@ def getTestQuakes(mc=2.0, floatnow=None):
 	testquake = bcp.earthquake(mag=testmag, loc=[0.,0.],evtime=floatnow, mc=mc)
 	thist=10**(testquake.lrupttime)
 	
-	print floatnow, thist
+	print(floatnow, thist)
 		 
 	#print thist
 	quakes+=[bcp.earthquake(mag=testmag, loc=[2.0, 3.], evtime=floatnow+1., mc=mc)]
@@ -2887,7 +2884,7 @@ def getTestQuakes(mc=2.0, floatnow=None):
 def getTestQuakes2(mc=2.0, floatnow=None):
 	quakes=[]
 	if floatnow==None: floatnow=mpd.date2num(dtm.datetime.now(pytz.timezone('UTC')))*days2secs
-	#for i in xrange(Neq):
+	#for i in range(Neq):
 	#	thismag=mc + 2.0 + 4.0*mrand.random()
 	#	quakes += [earthquake(mag=thismag, loc=[X*mrand.random(), Y*mrand.random()], evtime=1.0, mc=mc)]
 	#	#plt.plot([quakes[-1].loc[0]], [quakes[-1].loc[1]], 'o', ms=2*quakes[-1].mag)
@@ -2971,7 +2968,7 @@ def forecastdemo1(gridsize=.1, Neq=10, contres=2):
 	Y=float(xmax)
 	grid=[]
 	floatnow=mpd.date2num(dtm.datetime.now(pytz.timezone('UTC')))
-	for i in xrange(nelements*nelements):
+	for i in range(nelements*nelements):
 		grid+=[forecastsite(loc=[gridsize*(i%nelements), gridsize*(i/int(nelements))], dxdy=[gridsize, gridsize], evtime=floatnow, mc=2.0)]
 	#
 	# and make some earthquakes:
@@ -2998,12 +2995,12 @@ def forecastdemo1(gridsize=.1, Neq=10, contres=2):
 	Z2d.shape=(nelements, nelements)
 	#X1, Y1=numpy.meshgrid(X, Y)
 	
-	thisXs=numpy.array(range(nelements))
+	thisXs=numpy.array(list(range(nelements)))
 	thisXs*=gridsize
 	#thisYs=thisXs
 	
-	X_i = gridsize*numpy.array(range(nelements))
-	Y_i = gridsize*numpy.array(range(nelements))
+	X_i = gridsize*numpy.array(list(range(nelements)))
+	Y_i = gridsize*numpy.array(list(range(nelements)))
 	# cnts=plt.contourf(X_i, Y_i, Z2d,10)
 	cnts = getContourSet(X_i, Y_i, Z2d, 5*contres)
 	#
@@ -3071,10 +3068,10 @@ def mag5test(catname='cali5.cat', dorefresh=False, mc=2.5, mtest=5.0, drho=5.0, 
 	# 2) the largest of any overlapping eqs. ? this is actually a bit harder. we need
 	#     to make the initial list and then iterate over that list until overlappers are gone.
 	keepquakes=[]
-	for i in xrange(0, len(thiscat)):
+	for i in range(0, len(thiscat)):
 		useeq=True
-		#for ii in xrange(i):
-		for ii in xrange(0, len(thiscat)):
+		#for ii in range(i):
+		for ii in range(0, len(thiscat)):
 			# is this earthquake in the catalog of a previous earthquake? aka, is it an aftershock (is the catalog contaminated)?
 			dx=thiscat[ii][2] - thiscat[i][2]
 			dy=thiscat[ii][1] - thiscat[i][1]
@@ -3102,7 +3099,7 @@ def mag5test(catname='cali5.cat', dorefresh=False, mc=2.5, mtest=5.0, drho=5.0, 
 			#print keepquakes[-1]
 		#
 	#
-	print "{ %d	} distinct events." % len(keepquakes)
+	print("{ %d	} distinct events." % len(keepquakes))
 	#
 	#catalogs=[]
 	for rw in keepquakes:
@@ -3127,8 +3124,8 @@ def mag5test(catname='cali5.cat', dorefresh=False, mc=2.5, mtest=5.0, drho=5.0, 
 	for sc in cpf2.subcats:
 		#print sc[0], len(sc[1])
 		ct=sc[1]
-		Xp=scipy.array(map(operator.itemgetter(2), ct))
-		Yp=scipy.array(map(operator.itemgetter(1), ct))
+		Xp=scipy.array(list(map(operator.itemgetter(2), ct)))
+		Yp=scipy.array(list(map(operator.itemgetter(1), ct)))
 		X,Y = cpf.catmap(Xp, Yp)
 		mainmag=cpf2.getMainEvent(ct)[3]
 		plt.plot(X,Y, '.', ms=2, alpha=.5, zorder=round(mainmag))
@@ -3147,7 +3144,7 @@ def plotFitFile(fname, fnum=0):
 	#
 	for rw in f:
 		if rw[0]=='#': continue
-		rws=map(float, rw.split())
+		rws=list(map(float, rw.split()))
 		#print rws
 		#print beta
 		#

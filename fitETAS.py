@@ -94,7 +94,7 @@ def fitdoodle(nits=10000, arange=[-1.5, .5], brange=[-1.0, 1.0], crange=[-10.0, 
 	Rb=random.Random()
 	Rc=random.Random()
 	#
-	print "arange: [%f, %f], brange: [%f, %f], crange: [%f, %f]" % (arange[0], arange[1], brange[0], brange[1], crange[0], crange[1])
+	print("arange: [%f, %f], brange: [%f, %f], crange: [%f, %f]" % (arange[0], arange[1], brange[0], brange[1], crange[0], crange[1]))
 	#
 	# converging fit:
 	# plsq=spo.leastsq(fitres, p, args=(scipy.array(Y), scipy.array(X), scipy.array(W)), full_output=1)
@@ -104,15 +104,15 @@ def fitdoodle(nits=10000, arange=[-1.5, .5], brange=[-1.0, 1.0], crange=[-10.0, 
 	plsq = spo.leastsq(doodleerror2, p0, args=(scipy.array(ms), scipy.array(mcs), scipy.array(ndots), Ws), full_output=1 )
 	#
 	# now, calc the mean-error, etc.
-	print "lsq fit: " , plsq[0]
+	print("lsq fit: " , plsq[0])
 	errplsq=doodleerror2(plsq[0], ms, mcs, ndots)
 	#print "error array: ", errplsq
 	dlen=float(len(ms))
-	print "mean errors: ", errplsq.mean(), sum(errplsq)/(dlen-3.), errplsq.std()
+	print("mean errors: ", errplsq.mean(), sum(errplsq)/(dlen-3.), errplsq.std())
 	#
 	# omoriError(prams, t, dts, m, mc, p0=1.2)
 	#
-	for i in xrange(nits):
+	for i in range(nits):
 		# so we guess values for a*m + b*mc = ndot (logs anyway) and minimize the total error.
 		thisa = arange[0] + (arange[1]-arange[0])*Ra.random()
 		thisb = brange[0] + (brange[1]-brange[0])*Rb.random()
@@ -126,7 +126,7 @@ def fitdoodle(nits=10000, arange=[-1.5, .5], brange=[-1.0, 1.0], crange=[-10.0, 
 		#
 		thiserr=0.0
 		thiserrw=0.0
-		for j in xrange(len(ms)):
+		for j in range(len(ms)):
 			derr=doodleerror(ms[j], mcs[j], ndots[j], thisa, thisb, thisc)
 			thiserr+=derr
 			thiserrw+=derr*Ws[j]
@@ -144,15 +144,15 @@ def fitdoodle(nits=10000, arange=[-1.5, .5], brange=[-1.0, 1.0], crange=[-10.0, 
 			cminw=thisc
 		#
 	#
-	print "finished."
-	print "new UNweighted best fit: %.4f, %.4f, %.4f, %.4f" % (amin, bmin, cmin, err)
-	print "new WEIGHTED best fit: %.4f, %.4f, %.4f, %.4f" %(aminw, bminw, cminw, errw)
-	for j in xrange(len(ms)):
+	print("finished.")
+	print("new UNweighted best fit: %.4f, %.4f, %.4f, %.4f" % (amin, bmin, cmin, err))
+	print("new WEIGHTED best fit: %.4f, %.4f, %.4f, %.4f" %(aminw, bminw, cminw, errw))
+	for j in range(len(ms)):
 		m=ms[j]
 		mc=mcs[j]
 		ndot=ndots[j]
 		#print "(%s): m=%f, mc=%f, ndot=%f :: %f/%f" % (equakes[j], m, mc, ndot, (amin*m + bmin*mc + cmin), (amin*m + bmin*mc + cmin)-ndots[j])
-		print "(%s): m=%f, mc=%f, ndot=%f :: %f/%f" % (equakes[j], m, mc, ndot, (plsq[0][0]*m + plsq[0][1]*mc + plsq[0][2]), (plsq[0][0]*m + plsq[0][1]*mc + plsq[0][2])-ndots[j])
+		print("(%s): m=%f, mc=%f, ndot=%f :: %f/%f" % (equakes[j], m, mc, ndot, (plsq[0][0]*m + plsq[0][1]*mc + plsq[0][2]), (plsq[0][0]*m + plsq[0][1]*mc + plsq[0][2])-ndots[j]))
 
 
 def getETAScat(catname='parkfield', dorefresh=True, mc=None):
@@ -230,16 +230,16 @@ def getEqInts(objCat, mc=None, mainshock=None, catnum=0, fnum=None):
 	dt0=mpd.date2num(objCat.mainshock[0])
 	#fT=(scipy.array(map(mpd.date2num, map(operator.itemgetter(0), eqints))-dt0)*days2secs
 	#
-	T=(scipy.array(map(mpd.date2num, map(operator.itemgetter(0), eqints)))-mpd.date2num(objCat.mainshock[0]))*days2secs
-	dt=scipy.array(map(operator.itemgetter(1), eqints))*days2secs
+	T=(scipy.array(list(map(mpd.date2num, list(map(operator.itemgetter(0), eqints)))))-mpd.date2num(objCat.mainshock[0]))*days2secs
+	dt=scipy.array(list(map(operator.itemgetter(1), eqints)))*days2secs
 	#
 	if fnum!=None:
 		f1=plt.figure(fnum)
 		plt.clf()
-		plt.plot(map(operator.itemgetter(0), eqints), map(operator.itemgetter(1), eqints), '.-')
+		plt.plot(list(map(operator.itemgetter(0), eqints)), list(map(operator.itemgetter(1), eqints)), '.-')
 	
-		meandt=scipy.array(map(operator.itemgetter(1), eqints[0:10])).mean()
-		print meandt
+		meandt=scipy.array(list(map(operator.itemgetter(1), eqints[0:10]))).mean()
+		print(meandt)
 	'''
 	f1=plt.figure(0)
 	ax=plt.gca()
@@ -259,7 +259,7 @@ def getNN(eqset='parkfield', catnum=0, mc=None, fnum=0, directional=False):
 	if catnum>len(cpf.subcats): catnum=len(cpf.subcats)
 	#
 	# assume catalogs are mc selected...
-	thismc=min(map(operator.itemgetter(3), cpf.getcat(catnum)))
+	thismc=min(list(map(operator.itemgetter(3), cpf.getcat(catnum))))
 	#
 	mev = cpf.getMainEvent(cpf.getcat(catnum))
 	phis0 = mev[2]					
@@ -287,7 +287,7 @@ def getNN(eqset='parkfield', catnum=0, mc=None, fnum=0, directional=False):
 		#
 		#print "center: ", [ev[2], ev[1]]
 		dists=[]
-		for i in xrange(0, len(cpf.getcat(catnum))):
+		for i in range(0, len(cpf.getcat(catnum))):
 		#for ev2 in cpf.gatcat(catnum):
 			ev2=cpf.getcat(catnum)[i]
 			if ev2==ev: continue
@@ -324,21 +324,21 @@ def plotNNfile(nnfile, mc=None, mstar=None):
 	f=open(nnfile)
 	for rw in f:
 		if rw[0]=='#': continue
-		nns+=[map(float, rw.split())]
+		nns+=[list(map(float, rw.split()))]
 	#
 	return plotNNs(nns, mc, mstar)
 
 def plotNNs(nns, mc=None, mstar=None):
-	X=map(operator.itemgetter(0), nns)
-	Y=map(operator.itemgetter(1), nns)
+	X=list(map(operator.itemgetter(0), nns))
+	Y=list(map(operator.itemgetter(1), nns))
 	Yns=scipy.array(Y).copy()
 	Yns.sort()
-	Ns=range(1, len(X)+1)
+	Ns=list(range(1, len(X)+1))
 	Ns.reverse()
 	#
 	dens=[]
 	xdens=[]
-	for i in xrange(len(X)):
+	for i in range(len(X)):
 		if Y[i]==0.0: continue
 		dens+=[1.0/Y[i]]
 		xdens+=[X[i]]
@@ -374,13 +374,13 @@ def plotNNs(nns, mc=None, mstar=None):
 			plt.plot([Lr, Lr], [.01, 100], 's--', lw=2)
 			#plt.plot([Lc, Lc], [.01, 100], 's--', lw=2)
 			newX=Lr+(scipy.arange(500.0)/500.)*(max(X)-Lr)
-			newY=map(pow, (newX/Lr), scipy.ones(len(newX))*1.35)
+			newY=list(map(pow, (newX/Lr), scipy.ones(len(newX))*1.35))
 			newY=y0*scipy.array(newY)
 			plt.plot(newX, newY, 'c--', lw=2)
 			#
 			# sloped parts?
 			newXa=Lr/10.+(scipy.arange(500.0)/500.)*(max(X)-Lr/10.)
-			newYa=map(pow, (newXa/(Lr/10.)), scipy.ones(len(newX))*1.35)
+			newYa=list(map(pow, (newXa/(Lr/10.)), scipy.ones(len(newX))*1.35))
 			newYa=y0*scipy.array(newYa)
 			plt.plot(newXa, newYa, 'r--', lw=2)
 			#
@@ -393,16 +393,16 @@ def plotNNs(nns, mc=None, mstar=None):
 			#
 			# let's get a fit for the r<Lr elements:
 			fXY=[]
-			for i in xrange(len(X)):
+			for i in range(len(X)):
 				if X[i]==0. or Y[i]==0.: continue
 				if X[i]<=(Lr/2.): fXY+=[[math.log10(X[i]), math.log10(Y[i])]]
 			fXY.sort(key = lambda x: x[0])
 			f1=lft.linefit(fXY)
 			plsq=f1.doFit()[0]
 			yfit=plsq[0]
-			print "r<Lr fit: " , plsq, numpy.average(map(operator.itemgetter(1), fXY)), numpy.average(map(operator.itemgetter(1), fXY))/.85
+			print("r<Lr fit: " , plsq, numpy.average(list(map(operator.itemgetter(1), fXY))), numpy.average(list(map(operator.itemgetter(1), fXY)))/.85)
 			mcalpha=((1.76+yfit)/mc)
-			print "estimated mc=%f, or estimated mc-fact: %f/%f/%f" % ((2.*(yfit + 1.76)), mcalpha, mcalpha/.9, mcalpha/.8)
+			print("estimated mc=%f, or estimated mc-fact: %f/%f/%f" % ((2.*(yfit + 1.76)), mcalpha, mcalpha/.9, mcalpha/.8))
 			plt.plot([min(xdens) + dx*.01, max(xdens)-dx*.1], [10**yfit, 10**yfit], 'd--', lw=2, label='$fit: L_{c}$, $\\alpha_{mc}=%.2f$' % (mcalpha))
 	#
 	plt.title('NN distances of aftershocks')
@@ -461,7 +461,7 @@ def mcDsolver(N, mstar, mc, dm=1.0, Drange=[0.0, 2.0], nits=10**6):
 	drange=Drange[1]-Drange[0]
 	R1=random.Random()
 	minerr=N*10.0**10.0
-	for i in xrange(nits):
+	for i in range(nits):
 		thisD = Drange[0] + drange*R1.random()
 		err=abs(N-maxDensityExp(mstar, mc, dm, D=thisD))	# a little faster than x**2.0 i think.
 		#
@@ -483,12 +483,12 @@ def fitEqDists(eqset='parkfield', catnum=None, q=1.35, mc=None, dalpha=2.0, nbin
 	if catnum>len(cpf.subcats): catnum=len(cpf.subcats)
 	#
 	# assume catalogs are mc selected...
-	thismc=min(map(operator.itemgetter(3), cpf.getcat(catnum)))
+	thismc=min(list(map(operator.itemgetter(3), cpf.getcat(catnum))))
 	#
 	mstar = cpf.getMainEvent(cpf.getcat(catnum))[3]
 	#if eqset=='coalinga': mstar=6.3
 	
-	print "eqset: %s, mstar: %f" % (eqset, mstar)
+	print("eqset: %s, mstar: %f" % (eqset, mstar))
 	#
 	while cpf.getcat(catnum)[0][0]<cpf.getMainEvent()[0]: cpf.getcat(catnum).pop(0)
 	Nom     = 10**(b*(mstar-1.0-cpf.mc))
@@ -506,23 +506,23 @@ def fitEqDists(eqset='parkfield', catnum=None, q=1.35, mc=None, dalpha=2.0, nbin
 																# cartesian coords/area, productivity, etc.... well, it depends.
 																# note that the omori-like functs. are parameterized as dN/dr.
 	#
-	print "mstar=%f, mc=%f, lrlen=%f, rlen=%f/%f" % (mstar, thismc, lrlen, 10**lrlen, 10**(lrlen+1.))
+	print("mstar=%f, mc=%f, lrlen=%f, rlen=%f/%f" % (mstar, thismc, lrlen, 10**lrlen, 10**(lrlen+1.)))
 	#
 	dists=cpf.getDistances(cpf.getcat(catnum))
 	#plt.title('distances for %s' % eqset)
 	# R0: rect-lin distance, R1: approx1, R2: approx2 (better than 1), R3: bomb-proof spherical, R4: from geographicLib,
 	#dists += [[rw[0], thisx, thisy, R0, R1, R2, R3, R4, rw[4]]]	# and R3 is the only distance we really need; rw[4]->depth.
 	#
-	r0s=map(operator.itemgetter(3), dists)
-	r3s=map(operator.itemgetter(6), dists)
-	r4s=map(operator.itemgetter(7), dists)
+	r0s=list(map(operator.itemgetter(3), dists))
+	r3s=list(map(operator.itemgetter(6), dists))
+	r4s=list(map(operator.itemgetter(7), dists))
 	#
 	# 3d-dist:
-	X,Y,Z = scipy.array(map(operator.itemgetter(1), dists)), scipy.array(map(operator.itemgetter(2), dists)), scipy.array(map(operator.itemgetter(8), dists))
-	r3d=map(math.sqrt, (X**2. + Y**2. + Z**2.))
+	X,Y,Z = scipy.array(list(map(operator.itemgetter(1), dists))), scipy.array(list(map(operator.itemgetter(2), dists))), scipy.array(list(map(operator.itemgetter(8), dists)))
+	r3d=list(map(math.sqrt, (X**2. + Y**2. + Z**2.)))
 	#
 	Ninsides=[0.,0.,0.,0.]
-	for j in xrange(len(r0s)):
+	for j in range(len(r0s)):
 		if r0s[j]<(ruplenOmori): Ninsides[0]+=.5*(1.0/rlenfac)*1./ruplenOmori		# note: N/{r from epicenter}
 		if r3s[j]<(ruplenOmori): Ninsides[1]+=.5*(1.0/rlenfac)*1./ruplenOmori		# so, if rlenfac=.5, each dr -> 2*dr.
 		if r4s[j]<(ruplenOmori): Ninsides[2]+=.5*(1.0/rlenfac)*1./ruplenOmori
@@ -565,7 +565,7 @@ def fitEqDists(eqset='parkfield', catnum=None, q=1.35, mc=None, dalpha=2.0, nbin
 	if mstar>mt:
 		#meandm = ((1.5*(mstar-mt) + 1.0*(mt-thismc))/(mstar-thismc) + (1.0))/2.0
 		meandm = ((1.5*(mstar-mt) + 1.0*(mt-thismc))/(mstar-thismc)*(mstar-mt) + (1.0)*(mt-thismc))/(mstar-thismc)
-		print "m>7.6 meandm: %f" % meandm
+		print("m>7.6 meandm: %f" % meandm)
 		#
 		# following the same area integration methd, this overestimates:
 		#estRateExp = (.75*mstar - .5*thismc - .25*mt - .75*meandm + math.log10(2.))
@@ -680,7 +680,7 @@ def fitEqDists(eqset='parkfield', catnum=None, q=1.35, mc=None, dalpha=2.0, nbin
 	vz=max(h1[0])*2.0
 	zcopy=scipy.array(h1[0]).copy()
 	zcopy.sort()
-	for icpy in xrange(len(zcopy)):
+	for icpy in range(len(zcopy)):
 		if zcopy[icpy]>0:
 			vzmin=zcopy[icpy+0]
 			break
@@ -783,7 +783,7 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 	#
 	X=scipy.array([])
 	Y=scipy.array([])
-	for i in xrange(len(eqints[0])):
+	for i in range(len(eqints[0])):
 		thisdt=(eqints[1][i])
 		if thisdt==0.0: continue
 		Y+=[math.log10(thisdt)]
@@ -803,7 +803,7 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 	#
 	ft0=10**(plsqInts[0])
 	#
-	print "plsqInts: ", plsqInts
+	print("plsqInts: ", plsqInts)
 	#
 	yth=[]
 	yth2=[]
@@ -848,9 +848,9 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 	t0ssim2 = t0tau[0]
 	taussim2 = t0tau[1]
 	#
-	print "m=%f: t0=%f, p=%f, deltat= %f - %f, t0ss=%f" % (cpf.mainshock[3], ft0, fp, 10**(mstar/2.-2.28), 10**(mstar/2.-2.58), t0ssim)
+	print("m=%f: t0=%f, p=%f, deltat= %f - %f, t0ss=%f" % (cpf.mainshock[3], ft0, fp, 10**(mstar/2.-2.28), 10**(mstar/2.-2.58), t0ssim))
 	
-	print "yodat0=%f, yodatau=%f, dt0=%f, rupture=%f" % (yodat0, yodatau, yodatau*yodat0**p, 10**(mstar/2.0 - alpha))
+	print("yodat0=%f, yodatau=%f, dt0=%f, rupture=%f" % (yodat0, yodatau, yodatau*yodat0**p, 10**(mstar/2.0 - alpha)))
 	#for i in xrange(len(eqints[0])):
 	lxth=math.log10(eqints[0][0])-4.0
 	dlxth=.1
@@ -908,7 +908,7 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 	plt.scatter([tc], [10**(cpf.mc*mfactor - alpha)], marker='*', s=175, c='m', label='$m_{max} = %.2f$' % cpf.mc, zorder=10)
 	plt.scatter([tbath], [10**(thism*mfactor - alpha)], marker='*', s=175, c='c', label='$m_{max} = %.2f$' % thism, zorder=10)
 	
-	print "tc-tbath bit: ", math.log10(tc), math.log10(tbath), math.log10(tbath)/math.log10(tc)
+	print("tc-tbath bit: ", math.log10(tc), math.log10(tbath), math.log10(tbath)/math.log10(tc))
 
 	plt.legend(loc='best', title='%s, $p=%.2f$' % (namedict[eqset], p), scatterpoints=1, numpoints=1)
 	plt.xlabel('time $t$ (seconds) since mainshock', size=20)
@@ -923,13 +923,13 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 	ax2.set_yscale('log')
 	plt.xlabel('time $t$ since mainshock', size=16)
 	plt.ylabel('Number of earthquakes $N$', size=16)
-	Ns=range(1, len(ythssimcum)+1)
-	Nsints = range(1, len(eqints[0])+1)
+	Ns=list(range(1, len(ythssimcum)+1))
+	Nsints = list(range(1, len(eqints[0])+1))
 	#
 	plt.plot(eqints[0], Nsints, 'bs', label='raw data', zorder=2, ms=8, alpha=.6)
 	#nskip=int(float(len(eqints[0]))/100.)
 	skipints=scipy.array(eqints[0][nskip:]) - eqints[0][nskip-1]
-	Nskips= range(1, len(skipints)+1)
+	Nskips= list(range(1, len(skipints)+1))
 	plt.plot(skipints,Nskips, 'go', ms=8, alpha=.4, label='skip-data', zorder=2)
 	plt.plot([min(skipints), max(skipints)], [Nom, Nom], 'k--', lw=3, alpha=.7, label='$N_{Omori}=%d$' % int(Nom))
 	plt.plot(scipy.array(xth), scipy.array(ythssimcum), 'r--', label='Raw theory: $p=%.2f$, $\Delta m_\\tau = 0.0$' % fp, lw=2, zorder=5)
@@ -944,11 +944,11 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 		nprocs=mcNprocs
 		if nprocs==None: nprocs=mcp.cpu_count()
 		Procs = []
-		for pcount in xrange(nprocs):
+		for pcount in range(nprocs):
 			Procs+=[mcp.Process(target=mcomorifit1MCPwrapper, args=(scipy.array(skipints), scipy.array(Nskips), mstar, mc, fitnits, 1.08, -2.0, 2.28, 1.0, 1.0, miniq))]
 			Procs[-1].start()
 		#
-		for pcount in xrange(nprocs):
+		for pcount in range(nprocs):
 			Procs[pcount].join()
 		#
 		#P1=mcp.Process(target=mcomorifit1MCPwrapper, args=(scipy.array(skipints), scipy.array(Nskips), mstar, mc, fitnits, 1.08, -2.0, 2.28, 1.0, 1.0, miniq))
@@ -965,14 +965,14 @@ def fitEqInts(eqset='parkfield', nrange=[1,250], catnum=None, p=1.01, mc=None, d
 		#print plsq1, plsq2
 		#
 		plsqCum=miniq.get()
-		for i in xrange(nprocs-1):
+		for i in range(nprocs-1):
 			thisPLSQ=miniq.get()
 			#print thisPLSQ
 			if thisPLSQ[4]<plsqCum[4]: plsqCum=thisPLSQ
 		
 		#if plsq2[4]<plsq1[4]: plsqCum=plsq2
 		#print plsq1, plsq2
-		print "mc-plsq: ", plsqCum
+		print("mc-plsq: ", plsqCum)
 	else:
 		# and now we've done the fit. this is a stupid way to do this, but for now, just record the fit-prams here in hard-code.
 		# [p, dmtau, t0, tau, err]
@@ -1007,7 +1007,7 @@ def mcomorifit1(X, Y, m, mc, nits=10**5, p=1.08, dmtau=-2.0, dtau=2.28, b=1.0, d
 	#
 	minerr=10**12.
 	minprams=[]
-	for i in xrange(nits):
+	for i in range(nits):
 		# random sample the fitting parameters {dmtau, p}
 		dmtau = 4.5 + 4.0*R1.random()
 		p = 1.01 + .30*R2.random()
@@ -1020,11 +1020,11 @@ def mcomorifit1(X, Y, m, mc, nits=10**5, p=1.08, dmtau=-2.0, dtau=2.28, b=1.0, d
 		#y = ((t0 + X)**pm - t0**pm)/(pm*tau)
 		y = ybp.omoriRateInt(0., scipy.array(X), t0=t0, tau=tau, p=p)
 		#
-		errs = scipy.array(map(math.log10, Y)) - scipy.array(map(math.log10, y))
+		errs = scipy.array(list(map(math.log10, Y))) - scipy.array(list(map(math.log10, y)))
 		thiserr = sum(errs**2.0)/float(len(y)-3.)
 		#
 		if thiserr<minerr:
-			print "new min: %f, (%f, %f)" % (thiserr, p, dmtau)
+			print("new min: %f, (%f, %f)" % (thiserr, p, dmtau))
 			minerr=thiserr
 			minprams=[p, dmtau, t0, tau, minerr]
 		#
@@ -1051,7 +1051,7 @@ def resOmori1(prams, Y, X, mstar, mc):
 	# assuming self-sim:
 	dtau=2.28
 	Ngr = 1.0*(mstar - 1.0 - mc)
-	print 10.**prams[0]
+	print(10.**prams[0])
 	dmtau=10**prams[0]
 	#p=prams[1]
 	p=1.08
@@ -1067,7 +1067,7 @@ def resOmori1(prams, Y, X, mstar, mc):
 	# this is a cumulative residual...
 	y = ((t0 + X)**pm - t0**pm)/(pm*tau)
 	#
-	errs=scipy.array(map(math.log10, y))-scipy.array(map(math.log10, Y))
+	errs=scipy.array(list(map(math.log10, y)))-scipy.array(list(map(math.log10, Y)))
 	return errs
 
 #######
@@ -1078,7 +1078,7 @@ def fitscript(prange=[1.01, 1.26], dp=.05):
 	outses=[]	# [ [name, m, mc, p, t0], ..., ]
 	thisp=prange[0]
 	while thisp<prange[1]:
-		print "p=%f" % thisp
+		print("p=%f" % thisp)
 		ms=[]
 		mcs=[]
 		t0s=[]
@@ -1093,14 +1093,14 @@ def fitscript(prange=[1.01, 1.26], dp=.05):
 			t0s+=[math.log10(thisprams[3])]
 		#
 		thisplsq = spo.leastsq(doodleerror2, [0., 0., 0.], args=(scipy.array(ms), scipy.array(mcs), scipy.array(t0s), scipy.ones(len(t0s))), full_output=0 )
-		print "p, plsq:", thisp, thisplsq
+		print("p, plsq:", thisp, thisplsq)
 		#
 		thisp+=dp
 	#
-	Ms=map(operator.itemgetter(0), outses)
-	Mcs=map(operator.itemgetter(1), outses)
-	ps=map(operator.itemgetter(2), outses)
-	t0s=map(operator.itemgetter(3), outses)
+	Ms=list(map(operator.itemgetter(0), outses))
+	Mcs=list(map(operator.itemgetter(1), outses))
+	ps=list(map(operator.itemgetter(2), outses))
+	t0s=list(map(operator.itemgetter(3), outses))
 	aryt0s=scipy.array(t0s)
 	#
 	'''
@@ -1151,10 +1151,10 @@ def fitEqIntsXY(X,Y, nrange=[1,250]):
 		if err<minerr:
 			minerr=err
 			bestprams=[f1.a, f1.b, n, f2.a, f2.b]
-			print "(%d) newBestprams (%f): %s" % (n, minerr, bestprams)
+			print("(%d) newBestprams (%f): %s" % (n, minerr, bestprams))
 		#
 	#
-	print "meanDX0 = %f, %f" % (scipy.array(Y[0:bestprams[2]]).mean(), scipy.array(Y[0:bestprams[2]]).std())
+	print("meanDX0 = %f, %f" % (scipy.array(Y[0:bestprams[2]]).mean(), scipy.array(Y[0:bestprams[2]]).std()))
 	#
 	fig1=plt.figure(0)
 	plt.clf()
@@ -1198,8 +1198,8 @@ def omoriError(prams, t, dts, m, mc, p0=1.2):
 	#print "type: ", type(lt0).__name__, len(lt0), " :: ", lt0
 	lNGR = b*(m-dm-mc)
 	
-	lts=scipy.array(map(math.log10, (t+t0)))
-	ldts=scipy.array(map(math.log10, dts))
+	lts=scipy.array(list(map(math.log10, (t+t0))))
+	ldts=scipy.array(list(map(math.log10, dts)))
 	#lts=t
 	#print "dologp0"
 	#logp0=map(math.log10, (p0[0]-1.))
@@ -1224,7 +1224,7 @@ def omoriError2(prams, t, dts, m, mc, p):
 	lNGR = b*(m-dm-mc)
 	#
 	lts, ldts=[],[]
-	for i in xrange(len(t)):
+	for i in range(len(t)):
 		if dts[i]==0: continue
 		lts+=[math.log10(t[i]+t0)]
 		#lts+=[math.log10(t[i])]
@@ -1279,14 +1279,14 @@ def makeDistTable(fname='data/productionfits/distfits-rlf50-q135.dat'):
 		#
 		rws=rw.split()
 		eqname=rws[0]
-		mstar, mc, lrlen1, lrlen2, rlenfac, q, lestrate = map(float, rws[1:8])
-		Ns=map(float, rws[8:])
+		mstar, mc, lrlen1, lrlen2, rlenfac, q, lestrate = list(map(float, rws[1:8]))
+		Ns=list(map(float, rws[8:]))
 		D=float(rws[12])
 		Derr=float(rws[13])
 		#
 		#thislN = math.log10(.5*(Ns[1]+Ns[2]))	# algebraic mean of spher + lib methods
 		thislN = .5*(math.log10(Ns[1]*Ns[2]))	# geometric mean of spher+lib methods
-		print "Nvals (%s): %f, %f, <%f>" % (rws[0], Ns[1], Ns[2], thislN)
+		print("Nvals (%s): %f, %f, <%f>" % (rws[0], Ns[1], Ns[2], thislN))
 		foutstr = '\\textbf{%s} & %.2f & %.2f & %.2f & %.2f & %.2f & %.2f & %.2f  & %.2f $\pm$ %.2f\\\\ \n' % (eqname, mstar, mc, lrlen1, rlenfac, q, lestrate, thislN, D, Derr)
 		if mstar>7.6:
 			foutstr = '\\textbf{%s} & %.2f & %.2f & %.2f (%.2f) & %.2f & %.2f & %.2f & %.2f & %.2f $\pm$ %.2f \\\\\n' % (eqname, mstar, mc, lrlen1, lrlen2, rlenfac, q, lestrate, thislN, D, Derr)
@@ -1310,7 +1310,7 @@ def makeDistFigs(qs=[1.01, 1.05, .01], dalpha=2.0, nbins=100, q=1.35, rlenfac=.5
 		# eq will be the key...
 		mstar = eqDict[eq][1]
 		mc    = eqDict[eq][2]
-		print "Making %s plot, fignums (%d, %d)" % (eq, fnum, fnum+6)
+		print("Making %s plot, fignums (%d, %d)" % (eq, fnum, fnum+6))
 		#plt.figure()
 		#plt.clf()
 		z=fitEqDists(eqset=eq, nbins=nbins, fnum=fnum, catnum=eqDict[eq][3], q=q, rlenfac=rlenfac, D=D)
@@ -1326,7 +1326,7 @@ def makeDistFigs(qs=[1.01, 1.05, .01], dalpha=2.0, nbins=100, q=1.35, rlenfac=.5
 			lruplen2 = mt/2.0 - 1.76		# = 1.5*mt - 9.36
 		#
 		# (m, mc, lr, lr, l-factor, q, log(N') estimated)
-		print (z[0], z[1], lruplen1, lruplen2, z[2], z[3], z[4])
+		print((z[0], z[1], lruplen1, lruplen2, z[2], z[3], z[4]))
 		outstr='%s\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t' % (eq, z[0], z[1], lruplen1, lruplen2, z[2], z[3], z[4])
 		for n in z[5]:
 			outstr+='%f\t' % n
@@ -1337,8 +1337,8 @@ def makeDistFigs(qs=[1.01, 1.05, .01], dalpha=2.0, nbins=100, q=1.35, rlenfac=.5
 		meanN = math.log10(z[5][2])	# either is fine.
 		#print "solve D for meanN = ", meanN
 		Ds = mcDsolver(meanN, min(mt,mstar), mc, dm=1.0, Drange=[0.0, 2.0], nits=10**5)
-		print "Approx. Fract D: %f/%f" % (Ds[0], Ds[1])
-		print "meanN_estimated: %f, meanN_obs: %f" % (z[4], meanN)
+		print("Approx. Fract D: %f/%f" % (Ds[0], Ds[1]))
+		print("meanN_estimated: %f, meanN_obs: %f" % (z[4], meanN))
 		outstr+='%f\t%f\t' % (Ds[0], Ds[1])
 		#
 		outstr=outstr[0:-1]+'\n'
@@ -1361,28 +1361,28 @@ def makeDistFigs(qs=[1.01, 1.05, .01], dalpha=2.0, nbins=100, q=1.35, rlenfac=.5
 		fnum+=1
 
 def makeDistFigsSpecial():
-	print "making tohoku, q=2.0, D=1.0"
+	print("making tohoku, q=2.0, D=1.0")
 	z=fep.fitEqDists(eqset='tohoku', nbins=100, fnum=15, catnum=0, q=2.0, rlenfac=.5, D=1.0)
 	lN=math.log10(z[5][2])
 	Ds = mcDsolver(lN, min(7.6, 9.0), mc, dm=1.0, Drange=[0.0, 2.0], nits=10**5)
-	print (z[0], z[1], z[2], z[3], z[4], lN)
+	print((z[0], z[1], z[2], z[3], z[4], lN))
 	#
-	print "making tohoku, q=2.0, D=1.5"
+	print("making tohoku, q=2.0, D=1.5")
 	A=fep.fitEqDists(eqset='tohoku', nbins=100, fnum=16, catnum=0, q=2.0, rlenfac=.5, D=1.5)
 	lN=math.log10(z[5][2])
 	Ds = mcDsolver(lN, min(7.6, 9.0), mc, dm=1.0, Drange=[0.0, 2.0], nits=10**5)
-	print (z[0], z[1], z[2], z[3], z[4], lN)
+	print((z[0], z[1], z[2], z[3], z[4], lN))
 	#
-	for i in xrange(15, 16,21, 22):
+	for i in range(15, 16,21, 22):
 		plt.figure(i)
 		plt.title("Tohoku-oki")
 	#
-	print "making parkfield, rlenfac=1.0"
+	print("making parkfield, rlenfac=1.0")
 	A=fep.fitEqDists(eqset='parkfield', nbins=100, fnum=15, catnum=0, rlenfac=1.0, D=1.5)
 	lN=math.log10(z[5][2])
 	Ds = mcDsolver(lN, min(7.6, 5.96), mc, dm=1.0, Drange=[0.0, 2.0], nits=10**5)
-	print (z[0], z[1], z[2], z[3], z[4], lN)
-	for i in xrange(17,23):
+	print((z[0], z[1], z[2], z[3], z[4], lN))
+	for i in range(17,23):
 		plt.figure(i)
 		plt.title("Parkfield")
 	#
@@ -1407,11 +1407,11 @@ def makeOmoriFigses(ps=[1.01, 1.05, 1.08, 1.1, 1.2, 1.25], dalpha=2.0, forcep=Fa
 	ax.set_xscale('linear')
 	ax.set_yscale('log')
 	for rw in tratios:
-		print rw
+		print(rw)
 		plt.figure(0)
-		plt.plot(map(operator.itemgetter(0), rw), map(operator.itemgetter(1), rw), 'o-')
+		plt.plot(list(map(operator.itemgetter(0), rw)), list(map(operator.itemgetter(1), rw)), 'o-')
 		plt.figure(3)
-		plt.plot(map(operator.itemgetter(2), rw), map(operator.itemgetter(1), rw), 'o')
+		plt.plot(list(map(operator.itemgetter(2), rw)), list(map(operator.itemgetter(1), rw)), 'o')
 
 def makeOmoriFigs(p=1.05, dalpha=2.0, fnum=0, forcep=False, datafile='data/productionfits/intervalfits.dat', doMCfit=False, mcnits=10**5):	
 	eqDict = {'hmine': ['Hector Mine', 7.1, 3.0], 'parkfield':['Parkfield', 5.97, 1.5], 'sansim':['San Simeon', 6.5, 3.0], 'coalinga':['Coalinga', 6.7, 3.5], 'tohoku':['Tohoku-oki', 9.0, 4.5], 'elmayor':['El Mayor-Cucapah', 7.2, 2.5]}
@@ -1428,7 +1428,7 @@ def makeOmoriFigs(p=1.05, dalpha=2.0, fnum=0, forcep=False, datafile='data/produ
 	tratios=[]
 	for eq in eqDict:
 		# eq will be the key...
-		print "Making %s plot" % eq
+		print("Making %s plot" % eq)
 		a=fitEqInts(eq, p=p, dalpha=dalpha, mc=eqDict[eq][2], forcep=forcep, doMCfit=doMCfit, mcnits=mcnits)
 		fout = open(datafile, 'a')
 		outstr=''
@@ -1566,10 +1566,10 @@ def tahirETAS(rtype='ssimbump', gridsize=.05, eqtheta=40., eqeps=1.0/2.0, deltat
 	mycm = plt.get_cmap('spectral')
 	cNorm  = colors.Normalize(vmin=min(Z), vmax=max(Z))
 	scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=mycm)
-	print "len(Z): ", len(Z)
+	print("len(Z): ", len(Z))
 	
 	zlen=len(Z)
-	for i in xrange(zlen):
+	for i in range(zlen):
 		colorVal = scalarMap.to_rgba(Z[i])
 		#retLine, = ax.plot(line, color=colorVal)
 		ax3.plot([X[i]], [Y[i]], [Z[i]], '.', color=colorVal)
@@ -1577,7 +1577,7 @@ def tahirETAS(rtype='ssimbump', gridsize=.05, eqtheta=40., eqeps=1.0/2.0, deltat
 		if i>0:
 			z2val=scalarMap.to_rgba(.5*(Z[i]+Z[i-1]))
 			ax3.plot([X[i-1], X[i]], [Y[i-1], Y[i]], [Z[i-1], Z[i]], '-', color=z2val, alpha=.6)
-	for i in xrange(1,zlen):
+	for i in range(1,zlen):
 		#colorVal = scalarMap.to_rgba(Z[i])
 		#retLine, = ax.plot(line, color=colorVal)
 		#ax3.plot([X[i]], [Y[i]], [Z[i]], '.', color=colorVal)
@@ -1612,7 +1612,7 @@ def lognorm1d(X=10, mu=0.0, sigma=1.0, N=1000, fnum=1, doclf=True):
 	dx=float(X)/float(N)
 	Xs=[0.0]
 	Ys=[0.0]
-	for i in xrange(N):
+	for i in range(N):
 		Xs+=[Xs[-1]+dx]
 		Ys+=[lognorm(Xs[-1], mu, sigma)]
 	#

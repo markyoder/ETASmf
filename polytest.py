@@ -17,10 +17,10 @@ def polytest1():
 	#
 	#polylist=[p1, p2, p3, p4]
 	#
-	print "is p2 in p1? " , p[0].contains(p[1])
-	print "is p1 in p2? " , p[1].contains(p[2])
+	print("is p2 in p1? " , p[0].contains(p[1]))
+	print("is p1 in p2? " , p[1].contains(p[2]))
 	
-	print "is p3 in p1,p2?", p[0].contains(p[2]), p[0].contains(p[1]), p[1].contains(p[2])
+	print("is p3 in p1,p2?", p[0].contains(p[2]), p[0].contains(p[1]), p[1].contains(p[2]))
 	p2 = []
 	for pp in p:
 		p2+=[ [pp.exterior.xy[0].tolist(), pp.exterior.xy[1].tolist()] ]
@@ -52,7 +52,7 @@ def testpolys1():
 		plt.plot(poly[0], poly[1], '--')
 	
 	iop=innerouterpolys1(polys)
-	print len(iop)
+	print(len(iop))
 	
 	
 	return [polys, iop]
@@ -69,8 +69,8 @@ def innerouterpolys1(polylist):
 	#outerpolys=[]			# these will be lists. each entry is like: [[outer],[true-inner],[true-inner],..]
 	#
 	#for ply in polylist:
-	print polylist[1]
-	for i in xrange(len(polylist)):
+	print(polylist[1])
+	for i in range(len(polylist)):
 		polylistplus += [[i, [], polylist[i]]]
 		#
 		# shorthand:
@@ -83,7 +83,7 @@ def innerouterpolys1(polylist):
 		#
 		# for each polygon in this level:
 		# is the ith ("top") polygon inside the j'th poly?
-		for j in xrange(len(polylist)):
+		for j in range(len(polylist)):
 			if j==i: continue # (and also use exclusive inclusion (yi>y_test, not >=) to exclude self-insidedness).
 			X,Y = polylist[j][0][:], polylist[j][1][:]
 			#if x0>=max(X) or x0<=min(X) or y0>max(Y) or y0<min(Y): 
@@ -99,7 +99,7 @@ def innerouterpolys1(polylist):
 			# how many poly boundaries do we cross if we draw a line out of the poly in one direction.
 			# equivalently (and in computer language), how many segments at y1 < y <y2 (or upside down)
 		# are to the right of the point (or to the left, or up/down -- pick one).
-			for k in xrange(1,N):
+			for k in range(1,N):
 				k1 = k-1
 				#k2 = (k+1)%N	# note the k%N: the poly does not have to be closed
 				k2 = k	# but it should be, or you can count a crossing twice and get a bogus answer.
@@ -125,7 +125,7 @@ def innerouterpolys1(polylist):
 			#print i,j,j,ncrossings, ncrossings%2
 			if ncrossings%2==1:
 				# i'th poly is inside j'th poly...
-				print "poly %d is inside poly %d" % (i, j)
+				print("poly %d is inside poly %d" % (i, j))
 				polylistplus[-1][1] += [j]	
 			#
 		#
@@ -166,7 +166,7 @@ def plotpolys(polylist, fnum=0):
 		#X,Y = map(operator.itemgetter(0), poly), map(operator.itemgetter(1), poly)
 		X=poly.exterior.xy[0]
 		Y=poly.exterior.xy[1]
-		print X
+		print(X)
 		plt.plot(X,Y, 'o-')
 
 def inoutplots(outers, fnum=1):
@@ -177,7 +177,7 @@ def inoutplots(outers, fnum=1):
 	# quick set of colors...
 	clrs=['b', 'g', 'r', 'c', 'm', 'y', 'k']	#... i think
 	#
-	for i in xrange(len(outers)):
+	for i in range(len(outers)):
 		outer=outers[i]
 		clr=clrs[i%len(clrs)]
 		# first poly is the outer boundary; subsequent polys are inners.
@@ -186,7 +186,7 @@ def inoutplots(outers, fnum=1):
 		#
 		plt.plot(X,Y, '-', color=clr)
 		if len(outer)==1: continue
-		for j in xrange(1,len(outer)):
+		for j in range(1,len(outer)):
 			inner=outer[j]
 			X=inner[0]
 			Y=inner[1]

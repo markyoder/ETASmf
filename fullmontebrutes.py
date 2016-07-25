@@ -31,7 +31,7 @@ def brutefitres(fitset='parkfield',mstar=6.0, mc=2.5, p=1.08, b=1.0, dm=1.0, alp
 	ndof=0
 	err=0.0
 	#errs=(scipy(XYY[1])-scipy(XYY[2]))**2.0
-	for i in xrange(len(lyth)):
+	for i in range(len(lyth)):
 		if Y[i]!=None and lyth[i]!=None:
 			ndof+=1
 			#print ndof, i, float(XYY[1][i]), float(XYY[2][i])
@@ -89,9 +89,9 @@ def getXY(fitset='parkfield'):
 	#
 	#print "new catlen: %d" % len(cpf.getcat(useCatnum))
 	fmev=mpd.date2num(mev[0])
-	X = (scipy.array(map(mpd.date2num, map(operator.itemgetter(0), cpf.getcat(useCatnum)))) - fmev)*days2secs
+	X = (scipy.array(list(map(mpd.date2num, list(map(operator.itemgetter(0), cpf.getcat(useCatnum)))))) - fmev)*days2secs
 	Y = numpy.arange(1., len(X)+1)
-	lY = map(math.log10, Y)
+	lY = list(map(math.log10, Y))
 	#
 	return [X, Y, lY]
 #
@@ -179,7 +179,7 @@ def fullmontebruteRfit(nits=10**6, alpha0=None, beta0=None, gamma0=None, reduceE
 		if gamma0==None: gamma=myrand(R3, gammas)
 		#
 		#print "starting workers."
-		for j in xrange(len(myworkers)):
+		for j in range(len(myworkers)):
 			myworkers[j].setalphabetagamma(alpha, beta, gamma)
 			myworkers[j].start()
 			#myworkers[j].join()
@@ -187,7 +187,7 @@ def fullmontebruteRfit(nits=10**6, alpha0=None, beta0=None, gamma0=None, reduceE
 		#
 		#print "workers should be started. now join."
 		# i'm not sure this is fully necessary, but it's probably the better way to execute the code.
-		for j in xrange(len(myworkers)):
+		for j in range(len(myworkers)):
 			myworkers[j].join()	
 		#print "joined and waiting?"
 		#
@@ -206,12 +206,12 @@ def fullmontebruteRfit(nits=10**6, alpha0=None, beta0=None, gamma0=None, reduceE
 			totalerr/=totalNdof
 		#
 		if totalerr<minerr:
-			print "new error: %f, (%f, %f, %f)" % (totalerr, alpha, beta, gamma)
+			print("new error: %f, (%f, %f, %f)" % (totalerr, alpha, beta, gamma))
 			#
 			minerr=totalerr
 			minprams=[alpha, beta, gamma]
 		#
-	print "finished."
+	print("finished.")
 	
 #
 def fullmontebrutefit(nits=10**6, alpha0=None, beta0=None, gamma0=None):
@@ -272,7 +272,7 @@ def fullmontebrutefit(nits=10**6, alpha0=None, beta0=None, gamma0=None):
 		if beta0==None:  thisbeta  = betas[0] + (betas[1]-betas[0])*R2.random()
 		if gamma0==None: thisgamma = gammas[0] + (gammas[1]-gammas[0])*R3.random()
 		#
-		for i in xrange(len(pramsets)):
+		for i in range(len(pramsets)):
 		#for ps in pramsets:
 			ps=pramsets[i]
 			ps[6]=thisalpha
@@ -288,7 +288,7 @@ def fullmontebrutefit(nits=10**6, alpha0=None, beta0=None, gamma0=None):
 			if R.ready() and R.successful():
 				totalerr+=float(R.get())
 			else:
-				print "problem.", R
+				print("problem.", R)
 		P.terminate()
 		#
 		totalndof=1.0
@@ -296,7 +296,7 @@ def fullmontebrutefit(nits=10**6, alpha0=None, beta0=None, gamma0=None):
 		#
 		#print "err, minerr, prams: ", totalerr, minerr, thisalpha, thisbeta, thisgamma
 		if totalerr<minerr:
-			print "new min: %f, [%f, %f, %f]" % (totalerr, thisalpha, thisbeta, thisgamma)
+			print("new min: %f, [%f, %f, %f]" % (totalerr, thisalpha, thisbeta, thisgamma))
 			minprams=[thisalpha, thisbeta, thisgamma]
 			minerr=totalerr
 	#
@@ -403,7 +403,7 @@ class rfitWorker(mcp.Process):
 		#
 		Ndof=0
 		err=0.0
-		for i in xrange(len(lyth)):
+		for i in range(len(lyth)):
 			if self.Y[i]!=None and lyth[i]!=None:
 				Ndof+=1
 				#print ndof, i, float(XYY[1][i]), float(XYY[2][i])

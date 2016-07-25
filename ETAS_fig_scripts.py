@@ -55,10 +55,10 @@ def make_little_bass(fout='minibass.txt', base=3, m=6, mc=3):
 		N=nOmori(m=m-float(quake[1]), base=base)
 		parent = quake[1]
 		child = parent + 1
-		for i in xrange(int(N)):
+		for i in range(int(N)):
 			quakes += [[parent, child]]
 		if len(quakes)>500: 
-			print "breaking"
+			print("breaking")
 			break
 	#
 	f=open(fout, 'w')

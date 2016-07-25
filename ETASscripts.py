@@ -38,7 +38,7 @@ import matplotlib.cm as cmx
 from mpl_toolkits.mplot3d import axes3d
 #
 import multiprocessing as mpp
-import cPickle
+import pickle
 
 kmldir='kml'
 catdir='kml'
@@ -77,16 +77,16 @@ def makeCaliFiles(todt=dtm.datetime.now(pytz.timezone('UTC')), gridsize=.1, cont
 	socalcat = catdir + '/socal.cat'
 	calnevcat = catdir + '/calnev.cat'
 	#
-	print "make parkfield."
+	print("make parkfield.")
 	c=makeParkfieldETAS()
-	print "make el mayor."
+	print("make el mayor.")
 	d=makeElMayorETAS()
-	print "make socal"
+	print("make socal")
 	a=makeSocalETAS()
-	print "make norcal"
+	print("make norcal")
 	b=makeNorcalETAS()
 	#
-	print "finished."
+	print("finished.")
 	#
 	return None
 
@@ -180,11 +180,11 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	L_r = .5*10.0**(.5*mainshock['mag'] - 1.76)
 	d_lat = Lr_factor*L_r/lon2km
 	d_lon = Lr_factor*L_r/(lon2km*math.cos(deg2rad*mainshock['lat']))
-	print "mainshock data: ", mainshock, L_r, d_lat, d_lon
+	print("mainshock data: ", mainshock, L_r, d_lat, d_lon)
 	#
 	working_cat = atp.catfromANSS(lon=[mainshock['lon']-d_lon, mainshock['lon']+d_lon], lat=[mainshock['lat']-d_lat, mainshock['lat']+d_lat], minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	#
-	print "biggest event(s): ", [rw for rw in working_cat if rw['mag']==max(working_cat['mag'])]
+	print("biggest event(s): ", [rw for rw in working_cat if rw['mag']==max(working_cat['mag'])])
 	#
 	# now, do some ETAS:
 	# skip working_cat above, but parse lon, lat, etc. parameters similarly. pass those (and other) params to make_etas_fcfiles()
@@ -192,12 +192,12 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	# nepal_ETAS_prams = {'todt':None, 'gridsize':.1, 'contres':5, 'mc':4.5, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':'nepal', 'catlen':5.0*365.0, 'doplot':False, 'lons':[nepal_epi_lon-nepal_dlon, nepal_epi_lon+nepal_dlon], 'lats':[nepal_epi_lat-nepal_dlat, nepal_epi_lat+nepal_dlat], 'bigquakes':None, 'bigmag':7.00, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 	root_prams = {'todt':None, 'gridsize':gridsize, 'contres':10, 'mc':mc, 'kmldir':kmldir, 'catdir':kmldir, 'fnameroot':fnameroot, 'catlen':catlen, 'doplot':False, 'lons':[mainshock['lon']-d_lon, mainshock['lon']+d_lon], 'lats':[mainshock['lat']-d_lat, mainshock['lat']+d_lat], 'bigquakes':None, 'bigmag':mainshock['mag']-1.5, 'eqtheta':None, 'eqeps':None, 'fitfactor':5.0, 'cmfnum':0, 'fignum':1, 'contour_intervals':None}
 	#root_prams = {}
-	print "now execute with root_prams: ", root_prams
+	print("now execute with root_prams: ", root_prams)
 	#my_kwargs = {}
 	etas = make_etas_fcfiles(root_prams=root_prams, **kwargs)
 	plt.figure(1)
 	plt.title('ETAS to: %s' % str(to_dt if to_dt!=None else dtm.datetime.now(pytz.timezone('UTC'))))
-	plt.savefig(os.path.join(kml_dir, fname_root+'.png'))
+	plt.savefig(os.path.join(kmldir, fnameroot+'.png'))
 	#
 	#return biggest_earthquake
 	return etas
@@ -216,7 +216,7 @@ def contour_3d_etas(etas_object, fignum=0):
 	#
 	# find and plot mainshock:
 	ms_mag = max([rw[3] for rw in etas_object.catalog])
-	mainshock = filter(lambda rw:rw[3]==ms_mag, etas_object.catalog)
+	mainshock = [rw for rw in etas_object.catalog if rw[3]==ms_mag]
 	chengdu = {'lon':104.+4./60., 'lat':30. + 2./3.}
 	# 
 	# find z-value:
@@ -274,7 +274,7 @@ def circle_poly(x=0., y=0., R=1.0, n_points=100):
 	d_theta = math.pi*2.0/float(n_points)
 	poly = []
 	#
-	for n in xrange(n_points):
+	for n in range(n_points):
 		theta = n*d_theta
 		poly += [[x+R*math.cos(theta), y+R*math.sin(theta)]]
 	#
@@ -301,7 +301,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	dt0=dt1-dtm.timedelta(days=catlen)
 	fnameroot=fnameroot+str(fnameroot_suffix)
 	
-	print "fnameroot: ", fnameroot
+	print("fnameroot: ", fnameroot)
 	#return None
 	
 	#bigquakes=[]
@@ -332,12 +332,12 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	# note: a newer version of getMFETAScatFromANSS() returns a recarray, so we can be more explicit about which columns we use.
 	#
 	if len(cat)==0:
-		print "no available data."
+		print("no available data.")
 		return None
 	# returns "catalog" like: catalog+=[[mpd.date2num(rw[0]), rw[1], rw[2], rw[3], rw[4]]] (aka, a list of [float-dtm, lat, lon, mag, dpth]
 	#
 	# addquakes: do we want to add any other earthquakes into the catalog before we calculate ETAS?
-	print "addquakes: %d" % len(addquakes)
+	print("addquakes: %d" % len(addquakes))
 	if len(addquakes)>0:
 		for qk in addquakes:
 			# using "hasattr()" would be a better way of determining data type (date or float).
@@ -359,7 +359,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	#
 	mfb=None
 	mfb=bcp.BASScast(incat=cat, fcdate=dt1, gridsize=gridsize, contres=contres, mc=mc, eqeps=eqeps, eqtheta=eqtheta, fitfactor=fitfactor, contour_intervals=contour_intervals, lats=lats, lons=lons, rtype=rtype, p_quakes=p_quakes, p_map=p_map)
-	print "quakeLen: %d, %d" % (len(mfb.quakes),len(cat))
+	print("quakeLen: %d, %d" % (len(mfb.quakes),len(cat)))
 	#
 	#cbs=mfb.makeColorbar(cset=mfb.conts, colorbarname='%s/%s' % (kmldir, cbarname))
 	mfb.writeCat(fout=catfile)
@@ -370,7 +370,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 		if rw[3]>=bigmag:
 			bigquakes +=[[rw[0], rw[1], rw[2], rw[3]]]
 			#print rw
-	print "mfb.conts: ", mfb.conts
+	print("mfb.conts: ", mfb.conts)
 	mfb.writeKMLfile(cset=mfb.conts, fout=kmlfile, colorbarname=cbarname, equakes=bigquakes, top=contour_top, bottom=contour_bottom)
 	#str_cont_shapes = mfb.contsToStr(top=contour_top, bottom=contour_bottom)
 	#str_cont_shapes = mfb.contsToStr(top=1.0, bottom=0.0)
@@ -380,7 +380,7 @@ def makeETASFCfiles(todt=dtm.datetime(2004, 9, 15, 0, 0, 0, 0, tzinfo=pytz.timez
 	str_cont_shapes = mfb.fixedContsToFile(cset=None, file_out=cont_shapes_file, top=1.0, bottom=0.0)	# and users can easily select conts.
 	mfb.xyztofile(outfile=xyzfile)
 	
-	print "len(bigquakes): %d" % len(bigquakes)
+	print("len(bigquakes): %d" % len(bigquakes))
 	#
 	os.system('zip -q %s %s %s' % (kmzfile, kmlfile, cbarname))
 	#cbs=mfb.makeColorbar(cset=mfb.conts, colorbarname='%s/%s' % (kmldir, cbarname), reffMag=bigmag)
@@ -434,23 +434,23 @@ def make_capstone_2015_scenario(fnum=0, fnameroot = 'capstone/capstone', gridsiz
 						#    ... and assume that we identified the rupture, and the aftershock hazard is centered on the rupture center, not the epicenter:
 	addquakes+=[[mainshock['event_time'], mainshock['lat'] + .5*dy, mainshock['lon'] + .6*dx, mainshock['mag'], mainshock['depth'], epsilon_mainshock, theta_mainshock]]
 	#
-	print "begin ETAS scenario."
-	print "mainshock: ", mainshock
-	print " theta: %f, epsilon: %f" % (theta_mainshock, epsilon_mainshock)
-	print "rupture: ", dx, dy
-	print "L_r: ", L_r * 111.
-	print "time_points: "
-	for tp in time_points: print tp
+	print("begin ETAS scenario.")
+	print("mainshock: ", mainshock)
+	print(" theta: %f, epsilon: %f" % (theta_mainshock, epsilon_mainshock))
+	print("rupture: ", dx, dy)
+	print("L_r: ", L_r * 111.)
+	print("time_points: ")
+	for tp in time_points: print(tp)
 	
 	#
 	fn=fnum
 	#
 	for dfn, fcdt in enumerate(time_points):
-		for j in xrange(2):
+		for j in range(2):
 			plt.figure(j)
 			plt.clf()
 		#
-		print "forecastdate: %s" % fcdt
+		print("forecastdate: %s" % fcdt)
 		#
 		thisfnameroot = fnameroot + '_%d' % dfn
 		bc1=None
@@ -499,7 +499,7 @@ def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-N
 		# green valley fault scenario:
 		addquakes+=[[mpd.date2num(dtas2), as2lat, as2lon, 6.9, 10.0]]
 		#
-	print "addquakes:", addquakes
+	print("addquakes:", addquakes)
 	if bigquakes==None:
 		bigquakes=[]
 	if dtas2>todt: todt=dtas2
@@ -510,7 +510,7 @@ def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-N
 	dx=(faultNorth[0]-faultSouth[0])*math.cos(2.0*math.pi*faultSouth[1]/360.)
 	#
 	faultTheta = math.atan(dy/dx)*360./6.282	# though this might be negative or should be the other angle (it should be obvious).
-	print "fault theta: %f degrees" % faultTheta
+	print("fault theta: %f degrees" % faultTheta)
 	#faultTheta = (90.+60.)
 	#
 	fcdate0=dtm.datetime(2013, 5, 13, 00, 0, 0, 0, tzinfo=pytz.timezone('US/Pacific-New'))	# nominally, a "standard" time.
@@ -525,7 +525,7 @@ def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-N
 	fcdates+=[dtas1+dtm.timedelta(hours=1.0)]
 	fcdates.sort()
 	for rw in fcdates:
-		print "adding fcdate: %s" % str(rw)
+		print("adding fcdate: %s" % str(rw))
 	fcindex=0
 	#
 	dome=1
@@ -545,7 +545,7 @@ def makeGG2013(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pacific-N
 		plt.figure(num=1, figsize=(8,10))
 		plt.clf()
 		#
-		print "forecastdate: %s" % fcdt
+		print("forecastdate: %s" % fcdt)
 		#
 		activeEps=eqeps
 		activeTheta=eqtheta
@@ -589,7 +589,7 @@ def makeShakeout1(todt=dtm.datetime(2012, 10, 19, tzinfo=pytz.timezone('UTC')), 
 		addquakes+=[[mpd.date2num(dt1), 33.35, -115.71, 7.8, 7.6]]
 		addquakes+=[[mpd.date2num(dt2), 33.55, -115.89, 7.0, 6.2]]
 		#
-	print "addquakes:", addquakes
+	print("addquakes:", addquakes)
 	if bigquakes==None:
 		bigquakes=[]
 	if dt2>todt: todt=dt2
@@ -708,9 +708,9 @@ def Napa_ApplGeo_sequence(n_cpus=None, gridsize=.1, mc=2.0, lats = [35.3667, 39.
 		plt.savefig('%s/napa_etas_%s.png' % (prams_dict['kmldir'], str(this_etas.fcdate)))
 		try:
 			with open('%s/BASS_napa_%s.pkl' % (prams_dict['kmldir'], str(this_etas.fcdate)), 'w') as f:
-				cPickle.dump(this_etas, f)
+				pickle.dump(this_etas, f)
 		except Exception as excep:
-			print "failed to pickle: ", str(excep)
+			print("failed to pickle: ", str(excep))
 		#
 	#
 	#return return_etases
@@ -737,7 +737,7 @@ def EMC_ApplGeo_sequence():
 	# set up a pool for multi-processing.
 	n_procs = mpp.cpu_count()
 	my_cpu_count = max(1, n_procs-1)	# always leave me at least one cpu...
-	print "(hopefully) using %d cpus" % my_cpu_count
+	print("(hopefully) using %d cpus" % my_cpu_count)
 	mypool = mpp.Pool(my_cpu_count)
 	#
 	for i, this_date in enumerate(dates):
@@ -754,11 +754,11 @@ def EMC_ApplGeo_sequence():
 		# sloppy, but we'll get away with it:
 		plt.savefig(this_kml_dir + '/EMC-ApplGeo-%s.png' % str(this_date))
 		#
-		print "queued ETAS: %s" % str(this_date)
+		print("queued ETAS: %s" % str(this_date))
 	mypool.close()
 	mypool.join()
 	#
-	print "finished."
+	print("finished.")
 	#
 	return None
 #
@@ -853,7 +853,7 @@ def makeCascadia2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 	dx=(faultNorth[0]-faultSouth[0])*math.cos(2.0*math.pi*faultSouth[1]/360.)
 	#
 	theta_mainshock = math.atan(dy/dx)*360./(2.0*math.pi)	# though this might be negative or should be the other angle (it should be obvious).
-	print "fault theta: %f degrees" % theta_mainshock
+	print("fault theta: %f degrees" % theta_mainshock)
 	#
 	as_faultSouth = [-120.820685, 35.622952]
 	as_faultNorth = [-121.102000, 35.706000]
@@ -886,7 +886,7 @@ def makeCascadia2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 		#addquakes += [[addquakes[-1][0]+.5, 42., -124.0, 7.7]]
 		#
 		#
-	print "addquakes:", addquakes
+	print("addquakes:", addquakes)
 	if bigquakes==None:
 		bigquakes=[]
 	#
@@ -906,19 +906,19 @@ def makeCascadia2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 		#print "adding fcdate: %s" % str(fcdates[-1])
 	fcdates = [fcdate0] 
 	fcdates += [eq_mainshock[0]+dtm.timedelta(seconds=15*60)]
-	for i in xrange(2):
+	for i in range(2):
 		fcdates += [fcdates[-1] + dtm.timedelta(hours=1)]
-	for i in xrange(10):
+	for i in range(10):
 		fcdates += [fcdates[-1] + dtm.timedelta(hours=8)]
 	#
 	# now, add "response" forecasts, run after a large aftershock.
-	for i in xrange(1, len(addquakes)):
+	for i in range(1, len(addquakes)):
 		# about 14.4 minutes after each aftershock.
 		fcdates += [mpd.num2date(addquakes[i][0]+.01)]
 	#
 	fcdates.sort()
 	for rw in fcdates:
-		print "adding fcdate: %s" % str(rw)
+		print("adding fcdate: %s" % str(rw))
 	fcindex=start_index
 	#
 	plt.close(0)
@@ -928,7 +928,7 @@ def makeCascadia2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 		plt.figure(num=1, figsize=(8,10))
 		plt.clf()
 		#
-		print "forecastdate: %s" % fcdt
+		print("forecastdate: %s" % fcdt)
 		#
 		#activeEps=eqeps
 		#activeTheta=eqtheta
@@ -987,34 +987,34 @@ def makeAKshield2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 	# i expect this to change, but actaully it's not a bad way to go. this way we have good pre
 	# and post event seismicity (though it won't reflect the event's actual aftershock sequence).
 	event_timezone = pytz.timezone('US/Pacific-New')
-	eq_mainshock = [dtm.datetime(2014, 03, 27, 10, 54,0, tzinfo=event_timezone), 55.2, -156.7, 8.2, 1.0, 0.]
+	eq_mainshock = [dtm.datetime(2014, 0o3, 27, 10, 54,0, tzinfo=event_timezone), 55.2, -156.7, 8.2, 1.0, 0.]
 	#
 	# mainshock magnitude updates.
 	mainshocks = []
-	mainshocks += [[dtm.datetime(2014, 03, 26, 10, 31, 0, tzinfo=event_timezone), 55.2, -156.7, 4.0, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 26, 10, 31, 0, tzinfo=event_timezone), 55.2, -156.7, 4.0, eqeps, eqtheta]]
 	mainshocks += [eq_mainshock]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 8.6, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
-	mainshocks += [[dtm.datetime(2014, 03, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 8.6, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
+	mainshocks += [[dtm.datetime(2014, 0o3, 27, 10, 54, 0, tzinfo=event_timezone), 55.2, -156.7, 9.1, eqeps, eqtheta]]
 	#
 	update_times = []
-	update_times += [dtm.datetime(2014, 03, 26, 11, 31, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 26, 11, 31, 0, tzinfo=event_timezone)]
 	update_times += [eq_mainshock[0]]
-	update_times += [dtm.datetime(2014, 03, 27, 11, 31, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 12,  3, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 13,  5, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 14,  1, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 15,  1, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 16,  2, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 17,  2, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 18,  2, 0, tzinfo=event_timezone)]
-	update_times += [dtm.datetime(2014, 03, 27, 19,  2, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 11, 31, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 12,  3, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 13,  5, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 14,  1, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 15,  1, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 16,  2, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 17,  2, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 18,  2, 0, tzinfo=event_timezone)]
+	update_times += [dtm.datetime(2014, 0o3, 27, 19,  2, 0, tzinfo=event_timezone)]
 	#
 	# aftershocks:
 	aftershocks=[]
@@ -1082,7 +1082,7 @@ def makeAKshield2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 	fcindex = starting_i
 	# this is sloppy, but we'll get away with it (clean up before cloning this)
 	#for i in xrange(starting_i, len(mainshocks)):
-	for i in xrange(starting_i, len(update_times)):
+	for i in range(starting_i, len(update_times)):
 	#for rw in mainshocks:
 		mainshock_index = min(i, len(mainshocks)-1)
 		this_mainshock=mainshocks[mainshock_index]
@@ -1092,7 +1092,7 @@ def makeAKshield2014(todt=dtm.datetime(2013, 5, 13, tzinfo=pytz.timezone('US/Pac
 		plt.figure(num=1, figsize=(8,10))
 		plt.clf()
 		#
-		print "forecastdate: %s" % fcdt
+		print("forecastdate: %s" % fcdt)
 		#addquakes=[rw[0:4]]
 		addquakes = [this_mainshock]
 		j=0
@@ -1184,7 +1184,7 @@ def makeColormaps(colormap='spectral', nColors=1024):
 	colorList=["#000000"]
 	i=1
 	#while colorList[-1]!='#ffffff':
-	for i in xrange(nColors):
+	for i in range(nColors):
 		colorVal = scalarMap.to_rgba(float(i))
 		# now, convert to hex:
 		colorValHex = '#'

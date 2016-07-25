@@ -49,7 +49,7 @@ def distTests():
 		Rgeolib=g1['s12']/1000.0	# and converting from m to km.
 		#Rgeolib=g1['s12']
 		#
-		print "spherical: %f, lib: %f" % (sphdist, Rgeolib)
+		print("spherical: %f, lib: %f" % (sphdist, Rgeolib))
 	
 	
 	#g1=ggp.WGS84.Inverse(self.loc[1], self.loc[0], inloc[1], inloc[0])

@@ -59,18 +59,18 @@ sischuan_prams['to_dt'] = dtm.datetime.now(pytz.timezone('UTC'))
 def chengdus(mc=3.0, savefig=False):
 	# some bits to make ETAS maps of Chengdu area.
 	#
-	print "*** calc chengdu etas for 5 years..."
+	print("*** calc chengdu etas for 5 years...")
 	A=chengdu_etas(prams=sischuan_prams, mc=mc, catlen=5.*365.)
-	print "*** finished 5 year chengdu etas..."
+	print("*** finished 5 year chengdu etas...")
 	plt.figure(1)
 	plt.title('Chengdu ETAS(5 yr): %s\n' % str(sischuan_prams['to_dt']))
 	if savefig: plt.savefig(os.path.join('/home/myoder/Dropbox/Research/ACES/China2015/talks/nepal/images', 'chengdu_etas_5yr_b.png'))
-	print "*** now do 3d contour bit"
+	print("*** now do 3d contour bit")
 	f3d = esp.contour_3d_etas(A)
 	#
-	print "*** cal chengdu etas for 10 years..."
+	print("*** cal chengdu etas for 10 years...")
 	A=chengdu_etas(prams=sischuan_prams, mc=mc, catlen=10.*365.)
-	print "*** finished 10 year chengdu etas..."
+	print("*** finished 10 year chengdu etas...")
 	plt.figure(1)
 	plt.clf()
 	plt.title('Chengdu ETAS(10 yr): %s\n' % str(sischuan_prams['to_dt']))
@@ -85,7 +85,7 @@ def chengdu_etas(prams=sischuan_prams, dlat=3., dlon=3., **kwargs):
 	#
 	prams = mod_kwargs(prams,**kwargs)
 	#prams.update({'lats':[31.021-dlat, 31.021+dlat], 'lons':[103.367-dlon, 103.367+dlon]})
-	print "prams: ", prams['to_dt']
+	print("prams: ", prams['to_dt'])
 	#
 	A=esp.make_etas_fcfiles(prams, lats=[31.021-dlat, 31.021+dlat], lons=[103.367-dlon, 103.367+dlon])
 	#A=esp.makeETASFCfiles(to_dt=None, gridsize=.1, contres=3, mc=4.0, kmldir='kml', catdir='kml', fnameroot='chengdu_etas', catlen=prams['catlen'], doplot=False, lons=prams['lons'], lats=prams['lats'], bigquakes=[], bigmag=6.5, addquakes=[], eqeps=None, eqtheta=None, fitfactor=5.0, cmfnum=0, fignum=1, colorbar_fontcolor='k', contour_intervals=None, rtype='ssim', contour_top=1.0, contour_bottom=0.0, p_quakes=None, p_map=None, fnameroot_suffix='', maxNquakes=None)
@@ -146,16 +146,16 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	#cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), to_dt], fout=None, rec_array=True)
 	cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=dt_0), mainshock_dt], fout=None, rec_array=True)
 	# diagnostic: output catalog length
-	print "catalog length: %d" % len(cat_0)
+	print("catalog length: %d" % len(cat_0))
 	#
 	# if there are no events, we probably are looking for a long range ETAS, so let's look for ALL events in the full catlen interval:
 	if len(cat_0)==1:
-		print "empty catalog. search over the whole catalog length..."
+		print("empty catalog. search over the whole catalog length...")
 		# note: when we return as a recarray, an empty array has length 1 (pull up an empty array and figure out the details some time).
 		cat_0 = atp.catfromANSS(lon=[lon_center-d_lon_0, lon_center+d_lon_0], lat=[lat_center - d_lat_0, lat_center+d_lat_0], minMag=mc_0, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	#
 	#biggest_earthquake = filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0]
-	print "fetch preliminary catalog; find *mainshock*"
+	print("fetch preliminary catalog; find *mainshock*")
 	mainshock = {cat_0.dtype.names[j]:x for j,x in enumerate(filter(lambda x: x['mag']==max(cat_0['mag']), cat_0)[0])}
 	#print "biggest event(s): ", mainshock
 	#
@@ -166,14 +166,14 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	d_lon = Lr_map_factor*L_r/(lon2km*math.cos(deg2rad*mainshock['lat']))
 	lats = [mainshock['lat']-d_lat, mainshock['lat']+d_lat]
 	lons = [mainshock['lon']-d_lon, mainshock['lon']+d_lon]
-	print "lats, lons: ", lats, lons, L_r
-	print "mainshock found: ", mainshock, ".\nNow, find aftershocks..."
+	print("lats, lons: ", lats, lons, L_r)
+	print("mainshock found: ", mainshock, ".\nNow, find aftershocks...")
 	#
 	#working_cat = atp.catfromANSS(lon=[mainshock['lon']-d_lon, mainshock['lon']+d_lon], lat=[mainshock['lat']-d_lat, mainshock['lat']+d_lat], minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	primary_cat = atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=[to_dt-dtm.timedelta(days=catlen), to_dt], fout=None, rec_array=True)
 	#
 	if not doplot: return primary_cat
-	aftershock_cat = numpy.core.records.fromarrays(zip(*filter(lambda rw: rw['mag']>=(mainshock['mag']-dm_cat), primary_cat)),dtype=primary_cat.dtype)
+	aftershock_cat = numpy.core.records.fromarrays(list(zip(*[rw for rw in primary_cat if rw['mag']>=(mainshock['mag']-dm_cat)])),dtype=primary_cat.dtype)
 	
 	#
 	#cat_map = get_catalog_map(lats=lats, lons=lons, eq_cat = aftershock_cat)
@@ -182,7 +182,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	# now, let's draw circles around (some of) these events. this will be a bit sloppy, since we need to convert coordinates from dist -> lat/lon -> map.
 	#
 	for k,ev in enumerate(aftershock_cat):
-		print "event: %d: " % k, ev
+		print("event: %d: " % k, ev)
 		for j,lr_fact in enumerate([.5, 1.0]):
 			lr = Lr(ev['mag'], fact=lr_fact, d_lambda=d_lambda)
 			#as_circle = circle_geo(lon0=ev['lon'], lat0=ev['lat'], R=lr*1000., d_theta=None, N=250, units_theta='deg', R_units='m')
@@ -193,7 +193,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 			else:
 				line_style='-'
 			#
-			Xa, Ya = cat_map(*zip(*circle_geo(lon0=ev['lon'], lat0=ev['lat'], R=lr*1000., d_theta=None, N=250, units_theta='deg', R_units='m')))
+			Xa, Ya = cat_map(*list(zip(*circle_geo(lon0=ev['lon'], lat0=ev['lat'], R=lr*1000., d_theta=None, N=250, units_theta='deg', R_units='m'))))
 			plt.plot(Xa, Ya, '%s' % line_style, zorder=7, color=_colors[k%len(_colors)], lw=lw)
 		x,y = cat_map(ev['lon'], ev['lat'])
 		ev_dtm = ev['event_date'].tolist()
@@ -234,7 +234,7 @@ def etas_auto(lon_center=None, lat_center=None, d_lat_0=.25, d_lon_0=.5, dt_0=10
 	ax3d2.set_xlabel('longitude')
 	ax3d2.set_zlabel('$log(\\Delta t)$')
 	#
-	print "log(dt): ", numpy.log10(aftershock_cat['event_date_float'][1:]-aftershock_cat['event_date_float'][0])
+	print("log(dt): ", numpy.log10(aftershock_cat['event_date_float'][1:]-aftershock_cat['event_date_float'][0]))
 	#
 	f=plt.figure(3)
 	plt.clf()
@@ -279,7 +279,7 @@ def moment_figure():
 	plt.clf()
 	ax=plt.gca()
 	mcy = min(c1['mag'])
-	print "mcy: ", mcy
+	print("mcy: ", mcy)
 	#return c1['event_date'], [mcy for x in c1['mag']]
 	ax.vlines([x.tolist() for x in c1['event_date']], [mcy for x in c1['mag']], c1['mag'], lw=2., color='r')
 	ax2=ax.twinx()
@@ -316,9 +316,9 @@ def get_catalog_map(lats=None, lons=None, eq_cat=[], map_res='i', map_projection
 	# drawlsmask(land_color='0.8', ocean_color='w', lsmask=None, lsmask_lons=None, lsmask_lats=None, lakes=True, resolution='l', grid=5, **kwargs)
 	#cm.drawlsmask(land_color='0.8', ocean_color='c', lsmask=None, lsmask_lons=None, lsmask_lats=None, lakes=True, resolution=mapres, grid=5)
 
-	print "lat, lon ranges: ", lats, lons
-	cm.drawmeridians(range(int(lons[0]), int(lons[1])), color='k', labels=[0,0,1,1])
-	cm.drawparallels(range(int(lats[0]), int(lats[1])), color='k', labels=[1, 1, 0, 0])
+	print("lat, lon ranges: ", lats, lons)
+	cm.drawmeridians(list(range(int(lons[0]), int(lons[1]))), color='k', labels=[0,0,1,1])
+	cm.drawparallels(list(range(int(lats[0]), int(lats[1]))), color='k', labels=[1, 1, 0, 0])
 	#
 	if eq_cat!=None:
 		# can we also assign sizes dynamically, like colors?
@@ -367,7 +367,7 @@ def circle_geo(lon0=0., lat0=0., R=1.0, d_theta=1., N=None, units_theta='deg', R
 	
 
 if __name__=='__main__':
-	print "do __main__ stuff..."
+	print("do __main__ stuff...")
 	vc_parser.mpl.use('Agg')
 else:
 	plt.ion()

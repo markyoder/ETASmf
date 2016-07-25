@@ -25,7 +25,7 @@ Z_i = numpy.loadtxt('tmp/Zarray.dat')
 Y_i =   37.0 + .1*numpy.arange(Z_i.shape[0])
 X_i = -127.5 + .1*numpy.arange(Z_i.shape[1])
 
-print Z_i.shape, len(Y_i), len(X_i)
+print(Z_i.shape, len(Y_i), len(X_i))
 
 #-----------------------------------------------------------------------------#
 

@@ -73,7 +73,7 @@ class BASScast(object):
 			# [ [dtm, lat, lon, mag, (depth?)], [], ... ] (consistent with ypp.eqcatalog() format.
 			#
 			# load catalog into [quakes] and determine X, Y range from catalog.
-			print "we need a list-catalog. files are not supported at this time."
+			print("we need a list-catalog. files are not supported at this time.")
 			#
 			return None
 		#
@@ -122,7 +122,7 @@ class BASScast(object):
 		y=y0
 		#
 		self.sites=[]
-		for i in xrange(self.nLat*self.nLon):
+		for i in range(self.nLat*self.nLon):
 			self.sites+=[forecastsite(loc=[x0+gridsize*(i%self.nLon), y0+gridsize*(i/int(self.nLon))], dxdy=[gridsize, gridsize], evtime=self.fcdatef, mc=mc)]
 		#		
 		#print "lengths: %d, %d, %d" % (self.nLon, self.nLat, len(self.sites))
@@ -139,7 +139,7 @@ class BASScast(object):
 	#
 	def resetzvals(self):
 		# set all z to 0 or None.
-		for i in xrange(len(self.sites)):
+		for i in range(len(self.sites)):
 			self.sites[i].z=None
 	#
 	def calcBASScast(self, grid=None, quakes=None, nx=None, ny=None, gridsize=None):
@@ -169,11 +169,11 @@ class BASScast(object):
 		Z2d.shape=(ny, nx)		# aka, (ny rows, of nx elements) such that ny*nx=N
 		#X1, Y1=numpy.meshgrid(X, Y)
 		#
-		X_i=numpy.array(map(float, range(nx)))
+		X_i=numpy.array(list(map(float, list(range(nx)))))
 		X_i*=gridsize
 		X_i+=grid[0].loc[0]
 		#
-		Y_i=numpy.array(map(float, range(ny)))
+		Y_i=numpy.array(list(map(float, list(range(ny)))))
 		Y_i*=gridsize
 		Y_i+=grid[0].loc[1]
 		#
@@ -200,8 +200,8 @@ class BASScast(object):
 		#		
 		#dz=(maxval-minval)/float(ncontours)
 		
-		for y in xrange(len(self.Z2d)):
-			for x in xrange(len(self.Z2d[0])):
+		for y in range(len(self.Z2d)):
+			for x in range(len(self.Z2d[0])):
 				colorint=int(colorRange*(self.Z2d[y,x]-minval)/zrange)
 				#colorhex=self.fillHexString(hex(colorint), 6)
 				colorhex=fillHexString(hex(colorint), 6)
@@ -248,8 +248,8 @@ class BASScast(object):
 		cm.drawrivers(color='gray', zorder=1)
 		cm.fillcontinents(color='beige', zorder=0)
 		
-		cm.drawmeridians(range(int(self.lonrange[0]), int(self.lonrange[1])), color='k', labels=[1,1,1,1])
-		cm.drawparallels(range(int(self.latrange[0]), int(self.latrange[1])), color='k', labels=[1, 1, 1, 1])
+		cm.drawmeridians(list(range(int(self.lonrange[0]), int(self.lonrange[1]))), color='k', labels=[1,1,1,1])
+		cm.drawparallels(list(range(int(self.latrange[0]), int(self.latrange[1]))), color='k', labels=[1, 1, 1, 1])
 		#
 		# get X,Y for contours:
 		#
@@ -309,7 +309,7 @@ class BASScast(object):
 		dz= layers[0] - levels[0]
 		collects=cs.collections
 		carray = []
-		for i in xrange(0, len(collects)):
+		for i in range(0, len(collects)):
 			bgra_array = 255*collects[i].get_facecolor()[0]
 			strclr = '7d%02x%02x%02x' % ( bgra_array[2] , bgra_array[1] , bgra_array[0] )
 			#
@@ -333,7 +333,7 @@ class BASScast(object):
 		cs=cset.collections
 		outstr='# contour coordinates\n'
 		#
-		for i in xrange(len(cs)):
+		for i in range(len(cs)):
 			outstr+='#contour\t%d\n' % i
 			itrace=0
 			for trace in cs[i].get_paths():
@@ -383,7 +383,7 @@ class BASScast(object):
 		levels=[]
 		#contlevel=0
 		#
-		for i in xrange(len(cs)):
+		for i in range(len(cs)):
 			# level-level:
 			outlist+=[[]]
 			#contcount=0
@@ -466,7 +466,7 @@ class BASScast(object):
 		#outerpolys=[]			# these will be lists. each entry is like: [[outer],[true-inner],[true-inner],..]
 		#
 		#for ply in polylist:
-		for i in xrange(len(polylist)):
+		for i in range(len(polylist)):
 			polylistplus += [[i, [], polylist[i]]]
 			#
 			# shorthand:
@@ -478,7 +478,7 @@ class BASScast(object):
 			#
 			# for each polygon in this level:
 			# is the ith ("top") polygon inside the j'th poly?
-			for j in xrange(len(polylist)):
+			for j in range(len(polylist)):
 				if j==i: continue # (and also use exclusive inclusion (yi>y_test, not >=) to exclude self-insidedness).
 				X,Y = polylist[j][0][:], polylist[j][1][:]
 				#if x0>=max(X) or x0<=min(X) or y0>max(Y) or y0<min(Y): 
@@ -494,7 +494,7 @@ class BASScast(object):
 				# how many poly boundaries do we cross if we draw a line out of the poly in one direction.
 				# equivalently (and in computer language), how many segments at y1 < y <y2 (or upside down)
 			# are to the right of the point (or to the left, or up/down -- pick one).
-				for k in xrange(1,N):
+				for k in range(1,N):
 					k1 = k-1
 					#k2 = (k+1)%N	# note the k%N: the poly does not have to be closed
 					k2 = k	# but it should be, or you can count a crossing twice and get a bogus answer.
@@ -547,7 +547,7 @@ class BASScast(object):
 						# outlist -> [ [level0: [[cont0x], [cont0y]], [[cont1x], [cont1y]] ], [level1: ] ???
 		contlevel=0
 		#
-		for i in xrange(len(cs)):
+		for i in range(len(cs)):
 			# level-level:
 			outlist+=[[]]
 			contcount=0
@@ -599,7 +599,7 @@ class BASScast(object):
 
 	def plotPolyList(self, polys=None, markerstr='.-', fignum=3, pllevels=None):
 		if polys==None: polys=self.contsToPlotLists()
-		if pllevels==None: pllevels = range(len(polys))
+		if pllevels==None: pllevels = list(range(len(polys)))
 		if type(pllevels).__name__ in ('float', 'int'): pllevels=[pllevels]
 		plt.figure(fignum)
 		plt.clf()
@@ -616,7 +616,7 @@ class BASScast(object):
 				
 				 
 			lvlclr=plotcolor(ilevel, nlevels*2)
-			print ilevel, lvlclr
+			print(ilevel, lvlclr)
 			for xy in level:
 				for ring in xy:
 				#fixedpolys = checkPoly(inpoly=xy, fignum=None)
@@ -629,7 +629,7 @@ class BASScast(object):
 	def plotPolyListOuter(self, polys=None, markerstr='.-', fignum=3, pllevels=None):
 		# plot the simpler "just outers" version of the polygon list.
 		if polys==None: polys=self.contsToPlotListsOuter()
-		if pllevels==None: pllevels = range(len(polys))
+		if pllevels==None: pllevels = list(range(len(polys)))
 		if type(pllevels).__name__ in ('float', 'int'): pllevels=[pllevels]
 		plt.figure(fignum)
 		plt.clf()
@@ -646,7 +646,7 @@ class BASScast(object):
 				
 				 
 			lvlclr=plotcolor(ilevel, nlevels*2)
-			print ilevel, lvlclr
+			print(ilevel, lvlclr)
 			for xy in level:
 				#fixedpolys = checkPoly(inpoly=xy, fignum=None)
 				#for fxy in fixedpolys:
@@ -731,7 +731,7 @@ class BASScast(object):
 		#       polys may have more distinct polygons per contour level. of course, the individual polys
 		#       will have differend length as well.
 		#for i in xrange(startindex, len(cs)):
-		for i in xrange(startindex, len(polys)):
+		for i in range(startindex, len(polys)):
 			# each i is a contour level.
 			kmlstr+='<Placemark>\n'
 			#print i, resolution, len(warnings), len(polys)
@@ -742,7 +742,7 @@ class BASScast(object):
 			kmlstr+='<MultiGeometry>\n'
 			 
 			#for trace in cs[i].get_paths():
-			for ii in xrange(len(polys[i])):
+			for ii in range(len(polys[i])):
 				# each ii is a polygon (set).
 				kmlstr+='<Polygon>\n'
 				kmlstr+='<extrude>0</extrude>\n'
@@ -753,7 +753,7 @@ class BASScast(object):
 				
 				#tmpLL=[]		# KML is not always rendering properly. maybe incomplete polygons?
 				#for lng,lat in trace.vertices:
-				for ill in xrange(len(polys[i][ii][0][0])):
+				for ill in range(len(polys[i][ii][0][0])):
 					# first set is the outerBoundary
 					# noting that each polygon is stored as [[x], [y]], so len(polys[i][ii])=2 always.
 					# len(polys[i][ii][0])=len(polys[i][ii][1]) is the length or size (num. verts.) of the polygon.
@@ -770,13 +770,13 @@ class BASScast(object):
 				kmlstr+='</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n'
 				#
 				# inner polys?
-				for iInner in xrange(1,len(polys[i][ii])):
+				for iInner in range(1,len(polys[i][ii])):
 					thispoly=polys[i][ii][iInner]
 					# if any, these will be inner polys, each like [[x], [y]]
 					kmlstr+='<innerBoundaryIs>\n<LinearRing>\n<coordinates>\n'
 					# coords like 'lon,lat,alt\n'
 					# -77.05668055019126,38.87154239798456,100
-					for ill in xrange(len(thispoly[0])):
+					for ill in range(len(thispoly[0])):
 						kmlstr+='%f,%f,0\n' % (thispoly[0][ill], thispoly[1][ill])
 					kmlstr+='</coordinates>\n</LinearRing>\n</innerBoundaryIs>\n'
 				#
@@ -842,7 +842,7 @@ class BASScast(object):
 		#       polys may have more distinct polygons per contour level. of course, the individual polys
 		#       will have differend length as well.
 		#for i in xrange(startindex, len(cs)):
-		for i in xrange(startindex, len(polys)):
+		for i in range(startindex, len(polys)):
 			# each i is a contour level.
 			kmlstr+='<Placemark>\n'
 			#print i, resolution, len(warnings), len(polys)
@@ -853,7 +853,7 @@ class BASScast(object):
 			kmlstr+='<MultiGeometry>\n'
 			 
 			#for trace in cs[i].get_paths():
-			for ii in xrange(len(polys[i])):
+			for ii in range(len(polys[i])):
 				# each ii is a polygon (set).
 				kmlstr+='<Polygon>\n'
 				kmlstr+='<extrude>0</extrude>\n'
@@ -864,7 +864,7 @@ class BASScast(object):
 				
 				#tmpLL=[]		# KML is not always rendering properly. maybe incomplete polygons?
 				#for lng,lat in trace.vertices:
-				for ill in xrange(len(polys[i][ii][0][0])):		#[level][trace][outer(top)-poly][Xcoords] (last one could be 1)
+				for ill in range(len(polys[i][ii][0][0])):		#[level][trace][outer(top)-poly][Xcoords] (last one could be 1)
 					# first set is the outerBoundary
 					# noting that each polygon is stored as [[x], [y]], so len(polys[i][ii])=2 always.
 					# len(polys[i][ii][0])=len(polys[i][ii][1]) is the length or size (num. verts.) of the polygon.
@@ -881,13 +881,13 @@ class BASScast(object):
 				kmlstr+='</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n'
 				#
 				# inner polys?
-				for iInner in xrange(1,len(polys[i][ii])):
+				for iInner in range(1,len(polys[i][ii])):
 					thispoly=polys[i][ii][iInner]
 					# if any, these will be inner polys, each like [[x], [y]]
 					kmlstr+='<innerBoundaryIs>\n<LinearRing>\n<coordinates>\n'
 					# coords like 'lon,lat,alt\n'
 					# -77.05668055019126,38.87154239798456,100
-					for ill in xrange(len(thispoly[0])):
+					for ill in range(len(thispoly[0])):
 						kmlstr+='%f,%f,0\n' % (thispoly[0][ill], thispoly[1][ill])
 					kmlstr+='</coordinates>\n</LinearRing>\n</innerBoundaryIs>\n'
 				#
@@ -941,7 +941,7 @@ class BASScast(object):
 		kmlstr+='</ScreenOverlay>\n'
 		#
 		fixedpolys=0
-		for i in xrange(startindex, len(cs)):
+		for i in range(startindex, len(cs)):
 			kmlstr+='<Placemark>\n'
 			kmlstr+='<name>%s Risk</name>\n' % warnings[i/resolution]
 			kmlstr+='<styleUrl>#l%d</styleUrl>\n' % i
@@ -1022,7 +1022,7 @@ class BASScast(object):
 		timefactExp = math.log10(year2secs)
 		t1='%.2f' % (self.Z2d.min() + timefactExp + ratefactorExp)
 		t2='%.2f' % (self.Z2d.max() + timefactExp + ratefactorExp)
-		print "max set: ", self.Z2d.max(), timefactExp, ratefactorExp
+		print("max set: ", self.Z2d.max(), timefactExp, ratefactorExp)
 		tics = [self.Z2d.min(), self.Z2d.max()]
 		#print t1, t2
 		#
@@ -1228,12 +1228,12 @@ class forecastsite(locbase):
 		self.loc=loc
 		self.latfactor = math.cos(2.0*math.pi*loc[1]/360.0)
 		#
-		for i in xrange(len(self.loc)):
+		for i in range(len(self.loc)):
 			self.loc[i]=float(self.loc[i])
 		# element size:
 		if type(dxdy).__name__==type(.1).__name__:
 			dxdy=[dxdy, dxdy]
-		for i in xrange(len(dxdy)):
+		for i in range(len(dxdy)):
 			dxdy[i]=float(dxdy[i])
 		self.dxdy=dxdy	# note: these values are in lat/lon at this point.
 		#
@@ -1309,7 +1309,7 @@ class earthquake(locbase):
 		self.mag=float(mag)
 		self.loc=loc
 		self.alpha=alpha
-		for i in xrange(len(self.loc)):
+		for i in range(len(self.loc)):
 			self.loc[i]=float(self.loc[i])
 		#
 		self.mc=float(mc)
@@ -1632,7 +1632,7 @@ def getMFETAScatFromANSS(lons=[-121.0, -114.0], lats=[31.0, 37.0], dates=[None, 
 	if dates[1]==None: dates[1]=dtm.datetime.now(pytz.timezone('UTC'))
 	if dates[0]==None or dates[0]>=dates[1]: dates[0]=dates[1]-dtm.timedelta(days=840)
 	#
-	print dates
+	print(dates)
 	clist1=atp.catfromANSS(lon=lons, lat=lats, minMag=mc, dates0=dates, Nmax=999999, fout=None)
 	catalog=[]
 	#X,Y,M = [], [], []
@@ -1656,7 +1656,7 @@ def checkPoly(inpoly, fignum=None):
 	y0=inpoly[1][0]
 	outpoly=[[[inpoly[0][0]], [inpoly[1][0] ]]]
 	#outpoly=[[[], []]]
-	for i in xrange(1,len(inpoly[0])):
+	for i in range(1,len(inpoly[0])):
 		thisx=inpoly[0][i]
 		thisy=inpoly[1][i]
 		#
@@ -1664,7 +1664,7 @@ def checkPoly(inpoly, fignum=None):
 		outpoly[-1][1]+=[thisy]
 		#if thisx==x0 and thisy==y0 and len(outpoly[-1][0])>1:
 		if thisx==outpoly[-1][0][0] and thisy==outpoly[-1][1][0] and len(outpoly[-1][0])>1:
-			print "(improperly) closed poly, %d/%d" % (i, len(inpoly[0])-1)
+			print("(improperly) closed poly, %d/%d" % (i, len(inpoly[0])-1))
 			outpoly+=[[[], []]]
 	
 	if len(outpoly[-1][0])<2: outpoly.pop()

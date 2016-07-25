@@ -9,6 +9,6 @@ class yodapoly(sgp.Polygon):
 		if len(verts)==2:
 			# probably an [[X], [Y]] array:
 			newverts=[]
-			for i in xrange(len(verts[0])):
+			for i in range(len(verts[0])):
 				newverts+=[[verts[0][i], verts[1][i]]]
 			
