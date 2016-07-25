@@ -2171,6 +2171,8 @@ class earthquake(locbase):
 		#
 		# self-similar formulation:
 		#if self.mag>7.6: print "bigmag: %f" % self.mag
+		# (note; looks like these are not used; i think we use the lr0ssim formulation from above)... so this all needs review.
+		#
 		lNas = (2.0*(2.0+D))*math.log10(1.+D/2.) + (D/(2.+D))*(self.mag - self.dm - self.mc)
 		lNprimemax = lNas - lrupture + math.log10(2.0)	# log(2) from: 0 <r < L/2 -- assume mainshock is centered.
 		Nas=10.0**lNas
