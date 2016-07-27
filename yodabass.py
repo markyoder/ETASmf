@@ -1,3 +1,17 @@
+'''
+# a bit mess of code from the development and writeup of the 2012-2015 ETAS paper.
+# there is still some good code here, but there'a s lot of schwag as well. we should move all the original
+# brute force monte-carlo stuff to a separate "experiments" module, or the garbage.
+#
+# some working scripts for dists, intervals, etc. figures, but also some based on early experimental models,
+# like r0 ~ L_r. also, we probably need to reorganize the common code into submodules. right now, i think there are probably multiple
+# versions of some code, and i think that yodapy and common/ are going to be consolidated into yodiipy/
+# ... in fact, i think that yodapy is actually the yodapy.py module in common/... and in general, there may be
+# some confusion over some code that coexists in multiple places. ugh...
+#
+# also, clunky stuff like linefit probably should be removed.
+'''
+
 import yodapy as ypp
 import BASScast as bcp
 import ANSStools as atp
@@ -222,7 +236,8 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 	#b=1.0
 	#
 	cpf=cat # catalog object
-	if type(cpf).__name__ == 'list':
+	#if type(cpf).__name__ == 'list':
+	if isinstance(dpf,list):
 		#cpf=ypp.eqcatalog(cpf)
 		eqp=ypp.eqcatalog(cpf)
 		cpf=eqp
@@ -437,6 +452,8 @@ def calcEqDists(cat=None, mstar=None, mc=None, b=1.0, C1=2.77, C2=3.77, q=1.5, s
 #
 def eqdistTestF(catname='cats/parkfield.cat', mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3.07, Nfact=.8, maxdt=None, lw=1, C1=0.0, C2=0.0, K1=1.0, K2=0.0):
 	# note:
+	#Depricated: eqdistTestF() is coded to recognize a file input for catname.
+	#
 	# we originally parameterize lrupt at m/2 - 2.77, so these 3.0 numbers are pretty interesting.
 	# we might just fix at 2.77 (or so) and see what we can do with the other prams as well.
 	# a=ybp.eqdistTestF(catname='cats/sansim-mfetas.cat', mc=2.5, q=1.5, lenfact=3.0, Nfact=.61)
@@ -449,6 +466,11 @@ def eqdistTestF(catname='cats/parkfield.cat', mc=2.0, mev=None, len0=None, catnu
 	return eqdistTest(c1=c1, mc=mc, mev=mev, len0=len0, catnum=catnum, q=q, lenfact=lenfact, Nfact=Nfact, maxdt=maxdt, lw=lw, C1=C1, C2=C2, K1=K1, K2=K2)
 
 def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3.07, Nfact=.8, maxdt=None, lw=1, C1=0.0, C2=0.0, K1=1.0, K2=0.0):
+	# yoder 26 july 2016:
+	# ... and i think this is more "Test" code that does not really pan out. it does put up some nice cumulative spatial
+	# distribution figures that are probalby worth looking into again. maybe there is a way to use these type figures to
+	# do the initial ETAS rate-density analysis...
+	#
 	# len0 is a catalog length (aka, for skipping -- skip m-mc-2.0 early events)
 	# c1 is a catalog...
 	if lenfact==None:
@@ -460,10 +482,15 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	# Nfact: this is just a numerical efficiency factor. 1) we might not have seen or be representing all
 	# the aftershocks (aka, recent earthquake). 2) there is statistical variation in the actual numbers
 	# of detectable aftershocks., 3) it may be necessary to mask out some aftershocks, so N is affected.
-	if c1==None:
+	#if c1==None:
+	if c1 is None or isinstance(c1,str):
+		cat_name = (c1 or 'cats/sansim-mfetas.cat')
+		#
 		c1=eqp.eqcatalog([])
-		c1.loadCatFromFile('cats/sansim-mfetas.cat', minmag=mc)
+		#c1.loadCatFromFile('cats/sansim-mfetas.cat', minmag=mc)
+		c1.loadCatFromFile(cat_name, minmag=mc)
 	#
+	c1.checkdates(c1.getcat(catnum))
 	# max deta t:
 	if maxdt!=None:
 		maxdt=int(maxdt)
@@ -491,27 +518,32 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	# first, plot the actual distances. then, we'll compare to ETAS models.
 	#
 	# d1 is like [T, x, y, R0, R1, R2, R3], where R_i are in order of reliability.
-	T=list(map(operator.itemgetter(0), d1))
+	#T=list(map(operator.itemgetter(0), d1))
+	T = [rw[0] for rw in d1]
 	Tf = mpd.date2num(scipy.array(T))	# float-times, to evaluate scaling time.
 	Tf=Tf-Tf[0]
 	# full spherical expression:
-	R=list(map(operator.itemgetter(6), d1))	# dist-type R3
+	#R=list(map(operator.itemgetter(6), d1))	# dist-type R3
+	R = [rw[6] for rw in d1]
 	Ns=list(range(1, len0+1))
 	Ns.reverse()
 	thisR=R[:]
 	thisR.sort()
 	# get 3D distance (probably a more compact way to do this...)::
-	R3D=[]
-	for rw in d1:
-		#R3D += [math.sqrt(rw[6]*rw[6] + rw[8]*rw[8])]	# rw[3]-rw[7] are distances; rw[8] is depth.
-		R3D += [math.sqrt(rw[3]*rw[3] + rw[8]*rw[8])]	# rw[3]-rw[7] are distances; rw[8] is depth.
-	R3D.sort()
+	#R3D=[]
+	#for rw in d1:
+	#	#R3D += [math.sqrt(rw[6]*rw[6] + rw[8]*rw[8])]	# rw[3]-rw[7] are distances; rw[8] is depth.
+	#	R3D += [math.sqrt(rw[3]*rw[3] + rw[8]*rw[8])]	# rw[3]-rw[7] are distances; rw[8] is depth.
+	R3D = sorted([math.sqrt(rw[3]*rw[3] + rw[8]*rw[8]) for rw in d1])
+	#R3D.sort()
 	#
-	R0 = list(map(operator.itemgetter(3), d1))
-	R0.sort()
+	#R0 = list(map(operator.itemgetter(3), d1))
+	#R0.sort()
+	R0 = sorted([rw[3] for rw in d1])
 	# geographic-lib distances:
-	Rgl = list(map(operator.itemgetter(7), d1))
-	Rgl.sort()
+	#Rgl = list(map(operator.itemgetter(7), d1))
+	#Rgl.sort()
+	Rgl = sorted([rw[7] for rw in d1])
 	#
 	Nth = []
 	Nth1 = []
@@ -530,6 +562,9 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	chi = 10**lchi
 	#print "lr0, lchi, lNom, q, r0+r-r0", lr0, lchi, math.log10(Nom), q
 	for r in thisR:
+		# ... and these RDensity functions are based on r0~L_r, which we know is not the best approach
+		# to constraining that parameter.
+		#
 		Nth+=[RDensity(mstar=mstar, r=r, mc=mc, q=q, lenfact=lenfact)]
 		Nth2+=[Nfact*RDensity(mstar=mstar, r=r, mc=mc, q=q, lenfact=lenfact)]
 		
@@ -589,6 +624,10 @@ def eqdistTest(c1=None, mc=2.0, mev=None, len0=None, catnum=0, q=1.34, lenfact=3
 	return d1
 
 def rdensity(mstar, r, mc=2.0, dmstar=1.0, q=1.35, lenfact=1.5):
+	# this looks like an early effort to characterize the spatial-omori parameter r0
+	# from rupture length. eventually, we constrain this from a self-similar argument,
+	# so this function probably doesn't amount to much any more.
+	#
 	r0 = 10.0**(.5*mstar - lenfact)
 	Nom = 10**(mstar - dmstar - mc)
 	#
@@ -601,6 +640,8 @@ def rdensity(mstar, r, mc=2.0, dmstar=1.0, q=1.35, lenfact=1.5):
 	return lamb
 	
 def RDensity(mstar, r, mc=2.0, dmstar=1.0, q=1.35, lenfact=1.5):
+	# this interpretation also, i think, does not pan out, so it can probalby be removed.
+	#
 	r0 = 10.0**(.5*mstar - lenfact)
 	Nom = 10**(mstar - dmstar - mc)
 	#
@@ -873,6 +914,7 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	if len(cpf.subcats)==0: catnum=0
 	if catnum>len(cpf.subcats): catnum=len(cpf.subcats)
 	if mev==None: mev=cat.getMainEvent(cat.getcat(catnum))
+	if isinstance(mev[0], numpy.datetime64): mev[0] = mpd.num2date(mpd.datestr2num(str(mev[0])))
 	#
 	if mstar==None:
 		# assume largest mag in catalog:
@@ -882,7 +924,7 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	print(("catrange: ", cpf.cat[0][0], cpf.cat[-1][0]))
 	#
 	cpf.plotGRdist(fignum=0, doShow=True, fname=None)
-	eqints=cpf.getIntervals(catList=cpf.getcat(catnum), winLen=1)	# intervals are in days, right?
+	eqints=cpf.getIntervals(catList=cpf.getcat(catnum), interval_length=1)	# intervals are in days, right?
 	#eqints.reverse()
 	eqints.sort(key=lambda x: x[0])
 	#
@@ -891,9 +933,12 @@ def calcEqints(cat=None, mstar=None, mc=None, C1=5.9, C2=0., p=1.1, skipexp=3.0,
 	#eqdts.sort()
 	#eqints=eqdts[1:] - eqdts[:-1]
 	#
+	#print('mev: ', mev)
+	#print('eqints: ', eqints[0:5])
 	while eqints[0][0]<=(mev[0]):
 		eqints.pop(0)
 	# clean up dt=0 (screws up log-transforms). this might screw up counting, but dt=0 might also just be bad data.
+	
 	i=1
 	while i<len(eqints):
 		while eqints[i][1]==0.0: eqints.pop(i)
